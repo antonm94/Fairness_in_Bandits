@@ -23,6 +23,18 @@ class StochasticDominance:
         self.n = np.zeros((self.T, self.k))
         self.pi = np.zeros(self.k)
         self.p_star = [float(i) / sum(self.r_theta) for i in self.r_theta]
+        self.average_smooth_fair = np.zeros(T)
+        self.average_not_smooth_fair = np.zeros(T)
+        self.average_fairness_regret = np.zeros(T)
+        self.regret = np.zeros(T)
+        self.average_n = np.zeros((self.T, self.k))
+        if lam == 0.:
+            self.name = 'Thompson Sampling'
+        elif lam == 1.:
+            self.name = 'Stochastic Dominance Thompson Sampling'
+        else:
+            self.name = 'Thompson Sampling - Stochastic Dominance Thompson Sampling trade-off' \
+                        ' with Lambda = {}'.format(self.lam)
 
     def reset(self):
         self.s = np.full(self.k, .5)
@@ -40,15 +52,14 @@ class StochasticDominance:
         self.fairness_regret[t] = sum([max(self.p_star[i] - self.pi[i], 0.) for i in range(self.k)])
 
     def get_not_fair_ratio(self):
-        return np.sum(self.not_smooth_fair) / (np.sum(self.not_smooth_fair) + np.sum(self.smooth_fair))
+        return np.divide(self.average_not_smooth_fair, self.average_not_smooth_fair + self.average_smooth_fair)
 
     def get_fair_ratio(self):
-        return np.sum(self.smooth_fair) / (np.sum(self.not_smooth_fair) + np.sum(self.smooth_fair))
+        return np.divide(self.average_smooth_fair, self.average_not_smooth_fair + self.average_smooth_fair)
 
     def get_regret(self, n_average):
         distance_to_max = max(self.r_theta) - self.r_theta
-        print distance_to_max
-        return np.apply_along_axis(lambda x: sum(x * distance_to_max), 1, n_average)
+        return np.apply_along_axis(lambda x: np.sum(x * distance_to_max), 1, n_average)
 
     def run(self):
         for t in range(self.T):
@@ -84,3 +95,16 @@ class StochasticDominance:
 
             self.update_fairness(t)
 
+    def analyse(self, n_iterations):
+        for i in range(int(n_iterations)):
+            self.run()
+            self.average_fairness_regret = self.average_fairness_regret + np.add.accumulate(self.fairness_regret)
+            self.average_smooth_fair = self.average_smooth_fair + np.add.accumulate(self.smooth_fair)
+            self.average_not_smooth_fair = self.average_not_smooth_fair + np.add.accumulate(self.not_smooth_fair)
+            self.average_n = self.average_n + self.n
+            self.reset()
+        self.average_n = np.divide(self.average_n, n_iterations)
+        self.regret = self.get_regret(self.average_n)
+        self.average_fairness_regret = np.divide(self.average_fairness_regret, n_iterations)
+        self.average_smooth_fair = np.divide(self.average_smooth_fair, n_iterations)
+        self.average_not_smooth_fair = np.divide(self.average_not_smooth_fair, n_iterations)
