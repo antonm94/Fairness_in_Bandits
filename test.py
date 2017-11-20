@@ -1,22 +1,10 @@
-import time
 import matplotlib.pyplot as plt
-from load_data import load_data
 import thompson_sampling.stochastic_dominance as sd_ts
 import thompson_sampling.fair_stochastic_dominance as fair_sd_ts
-import numpy as np
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
-TEST_THOMPSON = True
-TEST_SD_TS = True
-TEST_FAIR_SD_TS = True
-TESTS = ['THOMPSON', 'SD_TS', 'FAIR_SD_TS']
-TESTS_INDEX = np.nonzero([TEST_THOMPSON, TEST_SD_TS, TEST_FAIR_SD_TS])[0]
-N_TESTS = len(TESTS_INDEX)
-TEST = 0
-N_ITERATIONS = 10.
-DATA_SET = ['Bar Exam', 'Default on Credit'][0]
 
 
 # def analyse(method):
@@ -52,83 +40,121 @@ DATA_SET = ['Bar Exam', 'Default on Credit'][0]
 #         print ('Regret\t{}'.format(regret[i][T-1]))
 
 
-
-# def plot_fairness_regret(method):
-#     x=range(T)
-#     plt.plot(x, method.[i], label='e2 =' + str(e2_array[i]))
-#
-#     plt.plot(x, [pow(k * t, 2. / 3) for t in x], label='regret bound O((k*T)^2/3)')
-#     plt.xlabel('T')
-#     plt.ylabel('cumulative fairness regret')
-#     plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-#     plt.show()
+def get_label(test):
+    fair = ['Fair Stochastic Dominance Thompson Sampling',
+            'Thompson Sampling - Fair Stochastic Dominance Thompson Sampling trade-off' \
+            ' with Lambda = {}'.format(test.lam)]
+    if test.name not in fair:
+        return test.name
+    else:
+        return test.name + ' e1= {}'.format(test.e1) + ' e2= {}'.format(test.e2) + ' delta= {}'.format(test.delta)
 
 
 class Test:
 
-    def __init__(self, data, method, n_iterations, T, e1_arr, e2_arr, delta_arr, lam=1):
+    def __init__(self, bandits, methods, n_iterations, T, e1_arr, e2_arr, delta_arr, lam_arr):
+        self.T = T
         self.test_cases = []
         self.n_iterations = n_iterations
-        bandits = load_data(data)
-        for e1 in e1_arr:
-            for e2 in e2_arr:
-                for delta in delta_arr:
-                    if method == 'Thompson Sampling':
-                        self.test_cases.append(sd_ts.StochasticDominance(bandits, T, e1, e2, delta, 0))
-                    elif method == 'Stochastic Dominance Thompson Sampling':
-                        self.test_cases.append(sd_ts.StochasticDominance(bandits, T, e1, e2, delta, lam))
-                    elif method == 'Fair Stochastic Dominance':
-                        self.test_cases.append(fair_sd_ts.FairStochasticDominance(bandits, T, e1, e2, delta, lam))
-                    else:
-                        print 'Unknown Method'
+        self.k = bandits.k
+        for method in methods:
+            for e1 in e1_arr:
+                for e2 in e2_arr:
+                    for delta in delta_arr:
+                        for lam in lam_arr:
+                            if method == 'Thompson Sampling':
+                                self.test_cases.append(sd_ts.StochasticDominance(bandits, T, e1, e2, delta, 0))
+                            elif method == 'Stochastic Dominance Thompson Sampling':
+                                self.test_cases.append(sd_ts.StochasticDominance(bandits, T, e1, e2, delta, lam))
+                            elif method == 'Fair Stochastic Dominance Thompson Sampling':
+                                self.test_cases.append(fair_sd_ts.FairStochasticDominance(bandits, T, e1, e2, delta, lam))
+                            else:
+                                print 'Unknown Method'
         for test in self.test_cases:
             test.analyse(n_iterations)
 
     def print_result(self):
-        print('\n' + '#' * 20 + '\n')
-        print('Iterations:\t{}'.format(self.n_iterations))
-        print('T:\t\t{}'.format(self.method.T))
-        print('e1:\t\t{}'.format(self.method.e1))
-        print('e2:\t\t{}'.format(e2))
-        print('delta:\t{}'.format(delta))
-        print('e2:\t\t{}'.format(e2))
-        print('Lambda: {}'.format(lam))
-        print self.method.name
-        print ('Smooth Fair:\t{}'.format(self.method.average_smooth_fair[-1]))
-        print ('Not Smooth Fair:\t{}'.format(self.method.average_not_smooth_fair[-1]))
-        print ('=> Smooth Fair with Prob:\t{}'.format(self.method.get_fair_ratio()[-1]))
-        print ('Needed Probability: 1-delta\t= {}'.format(1 - self.method.delta))
-        print ('Cumulative Fairness Regret\t{}'.format(self.method.average_fairness_regret[-1]))
-        print ('Regret\t{}'.format(self.method.regret[-1]))
+        for test in self.test_cases:
+            print('\n' + '#' * 20)
+            print test.name
+            print('#' * 20 + '\n')
+            print('Iterations:\t{}'.format(self.n_iterations))
+            print('T:\t\t{}'.format(test.T))
+            print('e1:\t\t{}'.format(test.e1))
+            print('e2:\t\t{}'.format(test.e2))
+            print('delta:\t{}'.format(test.delta))
+            print('Lambda: {}'.format(test.lam))
+            print ('Smooth Fair:\t{}'.format(test.average_smooth_fair[-1]))
+            print ('Not Smooth Fair:\t{}'.format(test.average_not_smooth_fair[-1]))
+            print ('=> Smooth Fair with Prob:\t{}'.format(test.get_fair_ratio()[-1]))
+            print ('Needed Probability: 1-delta\t= {}'.format(1 - test.delta))
+            print ('Cumulative Fairness Regret\t{}'.format(test.average_fairness_regret[-1]))
+            print ('Regret\t{}'.format(test.regret[-1]))
+
+    def plot_smooth_fairness(self):
+        x = range(self.T)
+        delta = self.test_cases[0].delta
+        for test in self.test_cases:
+            assert delta == test.delta
+            plt.plot(x, test.average_not_smooth_fair, label=test.name
+                                                        + ' e1= {}'.format(test.e1)
+                                                        + ' e2= {}'.format(test.e2))
+        delta = test.delta
+        plt.plot(x, [delta * t for t in x], label='allowed number of unfair with delta= {}'.format(delta))
+        plt.xlabel('T')
+        plt.ylabel('number of unfair w.r.t total variation distance')
+        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+        plt.show()
+
+    def plot_fairness_regret(self):
+        x = range(self.T)
+        for test in self.test_cases:
+            plt.plot(x, test.average_fairness_regret, label=test.name
+                                                           + ' e1= {}'.format(test.e1)
+                                                           + ' e2= {}'.format(test.e2)
+                                                           + ' delta= {}'.format(test.delta))
+
+        plt.plot(x, [pow(self.k * t, 2. / 3) for t in x], label='regret bound O((k*T)^2/3)')
+        plt.xlabel('T')
+        plt.ylabel('cumulative fairness regret')
+        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+        plt.show()
+
+    def plot_regret(self):
+        x = range(self.T)
+        for test in self.test_cases:
+            plt.plot(x, test.regret, label=get_label(test))
+        plt.xlabel('T')
+        plt.ylabel('regret')
+        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+        plt.show()
 
 
-
-
-    if method == 'Thompson Sampling':
-        thompson_sampling = sd_ts.StochasticDominance(bandits, T, e1, e2, delta, 0)
-        thompson_sampling.analyse(N_ITERATIONS)
-        print_result(thompson_sampling)
-    elif method == 'Stochastic Dominance':
-
-
-    elif method == 'Fair Stochastic Dominance':
-
-    else
-        print 'Unknown Method'
-    if TEST_SD_TS:
-        stochastic_dominance = sd_ts.StochasticDominance(bandits, T, e1, e2, delta, 1)
-        stochastic_dominance.analyse(N_ITERATIONS)
-        print_result(stochastic_dominance)
-
-    if TEST_SD_TS:
-        stochastic_dominance = sd_ts.StochasticDominance(bandits, T, e1, e2, delta, 0.5)
-        stochastic_dominance.analyse(N_ITERATIONS)
-        print_result(stochastic_dominance)
-
-    if TEST_FAIR_SD_TS:
-        fair_stochastic_dominance = fair_sd_ts.FairStochasticDominance(bandits, T, e1, e2, delta, 1)
-        fair_stochastic_dominance.analyse(N_ITERATIONS)
-        print_result(fair_stochastic_dominance)
+    # if method == 'Thompson Sampling':
+    #     thompson_sampling = sd_ts.StochasticDominance(bandits, T, e1, e2, delta, 0)
+    #     thompson_sampling.analyse(N_ITERATIONS)
+    #     print_result(thompson_sampling)
+    # elif method == 'Stochastic Dominance':
+    #
+    #
+    # elif method == 'Fair Stochastic Dominance':
+    #
+    # else
+    #     print 'Unknown Method'
+    # if TEST_SD_TS:
+    #     stochastic_dominance = sd_ts.StochasticDominance(bandits, T, e1, e2, delta, 1)
+    #     stochastic_dominance.analyse(N_ITERATIONS)
+    #     print_result(stochastic_dominance)
+    #
+    # if TEST_SD_TS:
+    #     stochastic_dominance = sd_ts.StochasticDominance(bandits, T, e1, e2, delta, 0.5)
+    #     stochastic_dominance.analyse(N_ITERATIONS)
+    #     print_result(stochastic_dominance)
+    #
+    # if TEST_FAIR_SD_TS:
+    #     fair_stochastic_dominance = fair_sd_ts.FairStochasticDominance(bandits, T, e1, e2, delta, 1)
+    #     fair_stochastic_dominance.analyse(N_ITERATIONS)
+    #     print_result(fair_stochastic_dominance)
 
 
         # if TEST_THOMPSON:
