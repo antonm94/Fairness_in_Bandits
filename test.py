@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import thompson_sampling.stochastic_dominance as sd_ts
 import thompson_sampling.fair_stochastic_dominance as fair_sd_ts
 import warnings
+import numpy as np
+
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
@@ -39,7 +41,6 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 #         print ('Cumulative Fairness Regret\t{}'.format(fairness_regret[i][T-1]))
 #         print ('Regret\t{}'.format(regret[i][T-1]))
 
-
 def get_label(test):
     fair = ['Fair Stochastic Dominance Thompson Sampling',
             'Thompson Sampling - Fair Stochastic Dominance Thompson Sampling trade-off' \
@@ -57,13 +58,16 @@ class Test:
         self.test_cases = []
         self.n_iterations = n_iterations
         self.k = bandits.k
+        self.tested_thompson = False
         for method in methods:
             for e1 in e1_arr:
                 for e2 in e2_arr:
                     for delta in delta_arr:
                         for lam in lam_arr:
                             if method == 'Thompson Sampling':
-                                self.test_cases.append(sd_ts.StochasticDominance(bandits, T, e1, e2, delta, 0))
+                                if not self.tested_thompson:
+                                    self.test_cases.append(sd_ts.StochasticDominance(bandits, T, e1, e2, delta, 0))
+                                    self.tested_thompson = True
                             elif method == 'Stochastic Dominance Thompson Sampling':
                                 self.test_cases.append(sd_ts.StochasticDominance(bandits, T, e1, e2, delta, lam))
                             elif method == 'Fair Stochastic Dominance Thompson Sampling':
@@ -93,14 +97,14 @@ class Test:
 
     def plot_smooth_fairness(self):
         x = range(self.T)
-        delta = self.test_cases[0].delta
+        delta = set([])
         for test in self.test_cases:
-            assert delta == test.delta
             plt.plot(x, test.average_not_smooth_fair, label=test.name
                                                         + ' e1= {}'.format(test.e1)
                                                         + ' e2= {}'.format(test.e2))
-        delta = test.delta
-        plt.plot(x, [delta * t for t in x], label='allowed number of unfair with delta= {}'.format(delta))
+            if test.delta not in delta:
+                plt.plot(x, [test.delta * t for t in x], label='allowed number of unfair with delta= {}'.format(test.delta))
+                delta.add(test.delta)
         plt.xlabel('T')
         plt.ylabel('number of unfair w.r.t total variation distance')
         plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
@@ -120,16 +124,29 @@ class Test:
         plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         plt.show()
 
-    def plot_regret(self):
+    def plot_average_total_regret(self):
         x = range(self.T)
         for test in self.test_cases:
             plt.plot(x, test.regret, label=get_label(test))
         plt.xlabel('T')
-        plt.ylabel('regret')
+        plt.ylabel('average total regret')
         plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         plt.show()
 
+    def plot_regret_tradeoff(self, lam):
+        n_lam = len(lam)
+        modification_regret = np.zeros(n_lam)
+        fairness_regret = np.zeros(n_lam)
+        for i in range(n_lam):
+            modification_regret[i] = abs(self.test_cases[i].regret[-1] - self.test_cases[0].regret[-1])
+            fairness_regret[i] = (self.test_cases[i].average_fairness_regret[-1])
 
+        plt.plot(lam, modification_regret, label='modification regret')
+        plt.plot(lam, fairness_regret, label='fairness regret')
+        plt.xlabel('Lambda')
+        plt.ylabel('regret')
+        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+        plt.show()
     # if method == 'Thompson Sampling':
     #     thompson_sampling = sd_ts.StochasticDominance(bandits, T, e1, e2, delta, 0)
     #     thompson_sampling.analyse(N_ITERATIONS)

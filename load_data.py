@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import bandits
 
-
 def bar_exam_data():
     df = pd.read_sas('/Users/antonm/bachelorThesis/DataSets/LawSchool/BarPassage/LSAC_SAS/lsac.sas7bdat')
     bar = df[['ID', 'sex', 'race1', 'pass_bar' , 'bar']]
@@ -29,11 +28,20 @@ def default_credit_data():
     return bandits.Bandits(arm)
 
 
-def load_data(s):
+def load_data(s,  p=None):
     if s == 'Bar Exam':
         return bar_exam_data()
-    else:
-        if s == 'Default on Credit':
+    elif s == 'Default on Credit':
             return default_credit_data()
-        else:
-            print 'unknown data set'
+    elif s == 'with given distribution':
+        arm = np.empty((len(p), 1000), dtype=object)
+        for i in range(len(p)):
+            arm[i] = np.random.binomial(1, p[i], 1000)
+
+        return bandits.Bandits(arm)
+    else:
+        print 'unknown data set'
+
+if __name__ == '__main__':
+    bandits = bar_exam_data()
+    print bandits.get_mean()

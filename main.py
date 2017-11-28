@@ -24,4 +24,4 @@ if __name__ == '__main__':
     test1.print_result()
     test1.plot_smooth_fairness()
     test1.plot_fairness_regret()
-    test1.plot_regret()
+    test1.plot_average_total_regret()
