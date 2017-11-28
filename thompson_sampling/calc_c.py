@@ -1,6 +1,8 @@
-import numpy as np
 import math
-from total_variation_distance import total_variation_distance
+
+import numpy as np
+
+from distance import total_variation_distance
 
 
 def c_alg2(e2, delta, realTheta, i, k):

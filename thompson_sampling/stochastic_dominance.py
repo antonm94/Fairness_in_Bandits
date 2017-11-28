@@ -5,7 +5,7 @@ from fairness_calc import smooth_fairness
 
 class StochasticDominance:
 
-    def __init__(self, bandits, T, e1, e2, delta, lam):
+    def __init__(self, bandits, T, e1, e2, delta, lam, distance):
         self.k = bandits.k
         self.arm = bandits.arms
         self.r_theta = bandits.theta
@@ -14,6 +14,7 @@ class StochasticDominance:
         self.e2 = e2
         self.delta = delta
         self.lam = lam
+        self.distance = distance
         self.s = np.full(self.k, .5)
         self.f = np.full(self.k, .5)
         self.not_smooth_fair = np.zeros(self.T)
@@ -48,7 +49,8 @@ class StochasticDominance:
         # print self.pi
         # print self.theta[t]
         # print self.r_theta
-        [self.not_smooth_fair[t], self.smooth_fair[t]] = smooth_fairness(self.e1, self.e2, self.theta[t], self.r_theta)
+        [self.not_smooth_fair[t], self.smooth_fair[t]] = smooth_fairness(self.e1, self.e2, self.theta[t], self.r_theta,
+                                                                         self.distance)
         self.fairness_regret[t] = sum([max(self.p_star[i] - self.pi[i], 0.) for i in range(self.k)])
 
     def get_not_fair_ratio(self):

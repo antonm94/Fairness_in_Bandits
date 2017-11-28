@@ -3,7 +3,7 @@ import thompson_sampling.stochastic_dominance as sd_ts
 import thompson_sampling.fair_stochastic_dominance as fair_sd_ts
 import warnings
 import numpy as np
-
+from distance import total_variation_distance
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
@@ -41,6 +41,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 #         print ('Cumulative Fairness Regret\t{}'.format(fairness_regret[i][T-1]))
 #         print ('Regret\t{}'.format(regret[i][T-1]))
 
+
 def get_label(test):
     fair = ['Fair Stochastic Dominance Thompson Sampling',
             'Thompson Sampling - Fair Stochastic Dominance Thompson Sampling trade-off' \
@@ -53,7 +54,8 @@ def get_label(test):
 
 class Test:
 
-    def __init__(self, bandits, methods, n_iterations, T, e1_arr, e2_arr, delta_arr, lam_arr):
+    def __init__(self, bandits, methods, n_iterations, T, e1_arr, e2_arr, delta_arr, lam_arr,
+                 distance=total_variation_distance):
         self.T = T
         self.test_cases = []
         self.n_iterations = n_iterations
@@ -66,16 +68,34 @@ class Test:
                         for lam in lam_arr:
                             if method == 'Thompson Sampling':
                                 if not self.tested_thompson:
-                                    self.test_cases.append(sd_ts.StochasticDominance(bandits, T, e1, e2, delta, 0))
+                                    self.test_cases.append(sd_ts.StochasticDominance(bandits, T, e1, e2,
+                                                                                     delta, 0, distance))
                                     self.tested_thompson = True
                             elif method == 'Stochastic Dominance Thompson Sampling':
-                                self.test_cases.append(sd_ts.StochasticDominance(bandits, T, e1, e2, delta, lam))
+                                self.test_cases.append(sd_ts.StochasticDominance(bandits, T, e1, e2,
+                                                                                 delta, lam, distance))
                             elif method == 'Fair Stochastic Dominance Thompson Sampling':
-                                self.test_cases.append(fair_sd_ts.FairStochasticDominance(bandits, T, e1, e2, delta, lam))
+                                self.test_cases.append(fair_sd_ts.FairStochasticDominance(bandits, T, e1, e2,
+                                                                                          delta, lam, distance))
                             else:
                                 print 'Unknown Method'
         for test in self.test_cases:
             test.analyse(n_iterations)
+
+    def add_test_case(self, bandits, method, e1, e2, delta, lam=1, distance=total_variation_distance):
+        if method == 'Thompson Sampling':
+            if not self.tested_thompson:
+                self.test_cases.append(sd_ts.StochasticDominance(bandits, self.T, e1, e2,
+                                                                 delta, 0, distance))
+                self.tested_thompson = True
+        elif method == 'Stochastic Dominance Thompson Sampling':
+            self.test_cases.append(sd_ts.StochasticDominance(bandits, self.T, e1, e2,
+                                                             delta, lam, distance))
+        elif method == 'Fair Stochastic Dominance Thompson Sampling':
+            self.test_cases.append(fair_sd_ts.FairStochasticDominance(bandits, self.T, e1, e2,
+                                                                      delta, lam, distance))
+        else:
+            print 'Unknown Method'
 
     def print_result(self):
         for test in self.test_cases:
@@ -99,9 +119,7 @@ class Test:
         x = range(self.T)
         delta = set([])
         for test in self.test_cases:
-            plt.plot(x, test.average_not_smooth_fair, label=test.name
-                                                        + ' e1= {}'.format(test.e1)
-                                                        + ' e2= {}'.format(test.e2))
+            plt.plot(x, test.average_not_smooth_fair, label=get_label(test))
             if test.delta not in delta:
                 plt.plot(x, [test.delta * t for t in x], label='allowed number of unfair with delta= {}'.format(test.delta))
                 delta.add(test.delta)
@@ -113,10 +131,7 @@ class Test:
     def plot_fairness_regret(self):
         x = range(self.T)
         for test in self.test_cases:
-            plt.plot(x, test.average_fairness_regret, label=test.name
-                                                           + ' e1= {}'.format(test.e1)
-                                                           + ' e2= {}'.format(test.e2)
-                                                           + ' delta= {}'.format(test.delta))
+            plt.plot(x, test.average_fairness_regret, label=get_label(test))
 
         plt.plot(x, [pow(self.k * t, 2. / 3) for t in x], label='regret bound O((k*T)^2/3)')
         plt.xlabel('T')
