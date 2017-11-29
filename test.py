@@ -6,9 +6,6 @@ import numpy as np
 from distance import total_variation_distance
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-
-
-
 # def analyse(method):
 #     global TEST
 #     n = 0
@@ -24,7 +21,6 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 #     smooth_fair[TEST] = np.divide(smooth_fair[TEST],  N_ITERATIONS)
 #     not_smooth_fair[TEST] = np.divide(not_smooth_fair[TEST],  N_ITERATIONS)
 #     TEST = TEST + 1
-
 
 # def print_results(method, ):
 #     for i in range(N_TESTS):
@@ -43,10 +39,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 def get_label(test):
-    fair = ['Fair Stochastic Dominance Thompson Sampling',
-            'Thompson Sampling - Fair Stochastic Dominance Thompson Sampling trade-off' \
-            ' with Lambda = {}'.format(test.lam)]
-    if test.name not in fair:
+    if test.name == 'Thompson Sampling':
         return test.name
     else:
         return test.name + ' e1= {}'.format(test.e1) + ' e2= {}'.format(test.e2) + ' delta= {}'.format(test.delta)
@@ -96,6 +89,8 @@ class Test:
                                                                       delta, lam, distance))
         else:
             print 'Unknown Method'
+
+        self.test_cases[-1].analyse(self.n_iterations)
 
     def print_result(self):
         for test in self.test_cases:
