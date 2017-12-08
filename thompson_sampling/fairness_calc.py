@@ -18,3 +18,4 @@ def smooth_fairness(e1, e2, pi, r, distance):
 
     return not_fair, fair
 
+
