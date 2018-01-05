@@ -1,5 +1,5 @@
 import numpy as np
-
+import random
 
 class Bandits:
 
@@ -13,3 +13,6 @@ class Bandits:
         for i in range(self.k):
             t[i] = np.mean(self.arms[i])
         return t
+
+    def pull(self, a):
+        return random.choice(self.arms[a])

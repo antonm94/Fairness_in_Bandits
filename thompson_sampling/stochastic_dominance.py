@@ -1,35 +1,23 @@
-import numpy as np
 import random
-from fairness_calc import smooth_fairness
+import numpy as np
+from distance import total_variation_distance
 
 
 class StochasticDominance(object):
 
-    def __init__(self, bandits, T, e1, e2, delta, lam, distance):
+    def __init__(self, bandits, T, lam=1, distance=total_variation_distance, mod=0):
         self.k = bandits.k
         self.arm = bandits.arms
-        self.r_theta = bandits.theta
         self.T = T
-        self.e1 = e1
-        self.e2 = e2
-        self.delta = delta
         self.lam = lam
+        self.mod = mod
         self.distance = distance
         self.s = np.full(self.k, .5)
         self.f = np.full(self.k, .5)
-        self.not_smooth_fair = np.zeros(self.T)
-        self.smooth_fair = np.zeros(self.T)
-        self.fairness_regret = np.zeros(self.T)
         self.theta = np.zeros((self.T, self.k))
         self.n = np.zeros((self.T, self.k))
         self.pi = np.zeros((self.T,self.k))
-        self.p_star = [float(i) / sum(self.r_theta) for i in self.r_theta]
-        self.average_smooth_fair = np.zeros((len(e1), len(e2), self.T, ))
-        self.average_not_smooth_fair = np.zeros((len(e1), len(e2), self.T, ))
-        self.average_fair_ratio = np.zeros((len(e1), len(e2), self.T, ))
-        self.average_fairness_regret = np.zeros(T)
-        self.regret = np.zeros(T)
-        self.average_n = np.zeros((self.T, self.k))
+
         if lam == 0.:
             self.name = 'Thompson Sampling'
         elif lam == 1.:
@@ -41,41 +29,25 @@ class StochasticDominance(object):
     def reset(self):
         self.s = np.full(self.k, .5)
         self.f = np.full(self.k, .5)
-        self.not_smooth_fair = np.zeros(self.T)
-        self.smooth_fair = np.zeros(self.T)
-        self.fairness_regret = np.zeros(self.T)
         self.n = np.zeros((self.T, self.k))
-
-    def update_smooth_fairness(self, e1, e2):
-        for t in range(self.T):
-            #self.r_theta = np.full(k, 0.5)+k[t] n[t]
-            [self.not_smooth_fair[t], self.smooth_fair[t]] = smooth_fairness(e1, e2, self.theta[t], self.r_theta,
-                                                                             self.distance)
-
-    def update_fairness_regret(self):
-        for t in range(self.T):
-            self.fairness_regret[t] = sum([max(self.p_star[i] - self.pi[t][i], 0.) for i in range(self.k)])
-            print self.fairness_regret[t]
-    def get_not_fair_ratio(self):
-        return np.divide(self.average_not_smooth_fair, self.average_not_smooth_fair + self.average_smooth_fair)
-
-    def get_fair_ratio(self):
-        return np.divide(self.average_smooth_fair, self.average_not_smooth_fair + self.average_smooth_fair)
-
-    def get_regret(self, n_average):
-        distance_to_max = max(self.r_theta) - self.r_theta
-        return np.apply_along_axis(lambda x: np.sum(x * distance_to_max), 1, n_average)
 
     def run(self):
         for t in range(self.T):
             self.theta[t] = np.random.beta(self.s, self.f, self.k)
+
             b = np.random.binomial(1, [self.lam])[0]
-            if b == 1:
-                # guessed bernoulli reward for each arm
-                guessed_r = np.random.binomial(1, self.theta[t])
-                # selected arm with random tie - breaking
-                a = np.random.choice(np.where(guessed_r == guessed_r.max())[0])
+
+            if b:
                 self.pi[t] = self.theta[t] / sum(self.theta[t])
+
+                if self.mod:
+                    a = np.random.choice(self.k, 1, p=self.pi[t])
+
+                else:
+                    # guessed bernoulli reward for each arm
+                    guessed_r = np.random.binomial(1, self.theta[t])
+                    # selected arm with random tie - breaking
+                    a = np.random.choice(np.where(guessed_r == guessed_r.max())[0])
 
             else:
                 max_theta = np.where(self.theta[t] == self.theta[t].max())[0]
@@ -97,30 +69,3 @@ class StochasticDominance(object):
             if t > 0:
                 self.n[t] = self.n[t - 1]
             self.n[t][a] = self.n[t][a] + 1
-            self.r_theta = np.divide(self.s, (1 + self.n[t]))
-
-            self.not_smooth_fair[t]
-
-    def analyse(self, n_iterations):
-        for it in range(int(n_iterations)):
-
-            self.run()
-            self.update_fairness_regret()
-            self.average_fairness_regret = self.average_fairness_regret + np.add.accumulate(self.fairness_regret)
-            self.average_n = self.average_n + self.n
-            for i in range(len(self.e1)):
-                for j in range(len(self.e2)):
-                    self.update_smooth_fairness(self.e1[i], self.e2[j])
-                    self.average_smooth_fair[i][j] = self.average_smooth_fair[i][j] + np.add.accumulate(self.smooth_fair)
-                    self.average_not_smooth_fair[i][j] = self.average_not_smooth_fair[i][j] + np.add.accumulate(self.not_smooth_fair)
-            self.reset()
-
-        self.average_n = np.divide(self.average_n, n_iterations)
-        self.regret = self.get_regret(self.average_n)
-        self.average_fairness_regret = np.divide(self.average_fairness_regret, n_iterations)
-        self.average_smooth_fair = np.divide(self.average_smooth_fair, n_iterations)
-        self.average_not_smooth_fair = np.divide(self.average_not_smooth_fair, n_iterations)
-        for i in range(len(self.e1)):
-            for j in range(len(self.e2)):
-                self.average_fair_ratio[i][j] = np.divide(self.average_smooth_fair[i][j],
-                                                          self.average_not_smooth_fair[i][j] + self.average_smooth_fair[i][j])

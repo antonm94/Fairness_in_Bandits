@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import bandits
 
+
 def bar_exam_data():
     df = pd.read_sas('/Users/antonm/bachelorThesis/DataSets/LawSchool/BarPassage/LSAC_SAS/lsac.sas7bdat')
     bar = df[['ID', 'sex', 'race1', 'pass_bar' , 'bar']]
@@ -28,6 +29,32 @@ def default_credit_data():
     return bandits.Bandits(arm)
 
 
+def adult_data():
+    column_names = ['age', 'workclass', 'fnlwgt', 'education', 'education_num', 'marital_status',
+                    'occupation', 'relationship', 'race', 'sex',
+                    'capital_gain', 'capital_loss', 'hours_per_week','native_country', 'income_class']
+
+
+    df = pd.read_csv('/Users/antonm/bachelorThesis/DataSets/Adult/adult.data.csv', names = column_names)
+
+    df['income_class'] = df['income_class'].astype('str')
+    df = df.replace({'income_class': {df['income_class'][7]: 1, df['income_class'][0]: 0}})
+    age_grouped = df.groupby('marital_status')
+    for name, group in age_grouped:
+               print(name)
+               print(len(group))
+
+    # arm = np.empty((5,), dtype=object)
+    # arm[0] = list(race_grouped.get_group('asian')['pass_bar'])
+    # arm[1] = list(race_grouped.get_group('black')['pass_bar'])
+    # arm[2] = list(race_grouped.get_group('hisp')['pass_bar'])
+    # arm[3] = list(race_grouped.get_group('other')['pass_bar'])
+    # arm[4] = list(race_grouped.get_group('white')['pass_bar'])
+    #
+    # return bandits.Bandits(arm)
+
+    #return bandits.Bandits(arm)
+
 def load_data(s,  p=None):
     if s == 'Bar Exam':
         return bar_exam_data()
@@ -43,5 +70,6 @@ def load_data(s,  p=None):
         print 'unknown data set'
 
 if __name__ == '__main__':
+    #adult_data()
     bandits = bar_exam_data()
     print bandits.get_mean()

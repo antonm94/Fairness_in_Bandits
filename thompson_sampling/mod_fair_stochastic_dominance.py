@@ -1,10 +1,12 @@
-import numpy as np
 import random
-from fairness_calc import smooth_fairness
+
+import numpy as np
+
 from calc_c import c_alg2
+from fairness_calc import smooth_fairness
 
 
-class FairStochasticDominance(object):
+class ModFairStochasticDominance(object):
 
     def __init__(self, bandits, T, e1, e2, delta, lam, distance):
         self.k = bandits.k
@@ -106,8 +108,12 @@ class FairStochasticDominance(object):
                     # exploration
                     self.rounds_exploring = self.rounds_exploring + 1
                     self.theta[t] = np.full(self.k, .5)
-                    a = np.random.choice(self.k)
-                    self.pi[t] = np.full(self.k, 1. / self.k)
+                    a = np.random.choice(o)
+
+                    for i in o:
+                        self.pi[t][i] = 1./len(o)
+
+                    print pi[t]
 
             else:
                 self.theta[t] = np.random.beta(self.s, self.f, self.k)

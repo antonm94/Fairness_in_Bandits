@@ -1,10 +1,15 @@
 import matplotlib.pyplot as plt
 import thompson_sampling.stochastic_dominance as sd_ts
-import thompson_sampling.fair_stochastic_dominance as fair_sd_ts
+import thompson_sampling.bern_fair_stochastic_dominance_ts as fair_sd_ts
+import thompson_sampling.mod_fair_stochastic_dominance as mod_fair_sd_ts
+import logging
 import warnings
 import numpy as np
 from distance import total_variation_distance
 warnings.simplefilter(action='ignore', category=FutureWarning)
+LOGGING = 1
+if LOGGING > 0:
+    logger = logging.getLogger(__name__)
 
 # def analyse(method):
 #     global TEST
@@ -47,47 +52,36 @@ def get_label(test, i, j):
 
 class Test:
 
-    def __init__(self, bandits, methods, n_iterations, T, e1_arr, e2_arr, delta_arr, lam_arr,
-                 distance=total_variation_distance):
+    def __init__(self, bandits, methods, n_iterations, T):
         self.T = T
         self.test_cases = []
         self.n_iterations = n_iterations
+        self.bandtis = bandits
         self.k = bandits.k
+        self.tested_thompson = False
+
+    def add_test_cases(self, delta_arr, distance, e1_arr, e2_arr, lam_arr, methods, mod, n_iterations):
         for method in methods:
             for lam in lam_arr:
                 if method == 'Thompson Sampling':
-                    self.test_cases.append(sd_ts.StochasticDominance(bandits, T, e1_arr, e2_arr,
+                    if not self.tested_thompson:
+                        self.test_cases.append(sd_ts.StochasticDominance(self.bandits, self.T, e1_arr, e2_arr,
                                                                          delta_arr, 0, distance))
-                    break
+                        self.tested_thompson = True
                 elif method == 'Stochastic Dominance Thompson Sampling':
-                    self.test_cases.append(sd_ts.StochasticDominance(bandits, T, e1_arr, e2_arr,
-                                                                     delta_arr, lam, distance))
+                    self.test_cases.append(sd_ts.StochasticDominance(self.bandits, self.T, e1_arr, e2_arr,
+                                                                     delta_arr, lam, distance, mod))
                 elif method == 'Fair Stochastic Dominance Thompson Sampling':
-                    self.test_cases.append(fair_sd_ts.FairStochasticDominance(bandits, T, e1_arr, e2_arr,
-                                                                                          delta_arr, lam, distance))
+                    self.test_cases.append(fair_sd_ts.FairStochasticDominance(self.bandits, self.T, e1_arr, e2_arr,
+                                                                              delta_arr, lam, distance, mod))
                 else:
                     print 'unknown method'
+        for i in range(len(self.test_cases)):
+            self.test_cases[i].analyse(n_iterations)
+            if LOGGING > 0:
+                logger.info('test {}'.format(i), ' out of {}'.format({len(self.test_cases)}, ' is done.'))
 
 
-        for test in self.test_cases:
-            test.analyse(n_iterations)
-
-    def add_test_case(self, bandits, method, e1, e2, delta, lam=1, distance=total_variation_distance):
-        if method == 'Thompson Sampling':
-            if not self.tested_thompson:
-                self.test_cases.append(sd_ts.StochasticDominance(bandits, self.T, [e1], [e2],
-                                                                 [delta], 0, distance))
-                self.tested_thompson = True
-        elif method == 'Stochastic Dominance Thompson Sampling':
-            self.test_cases.append(sd_ts.StochasticDominance(bandits, self.T, [e1], [e2],
-                                                             [delta], lam, distance))
-        elif method == 'Fair Stochastic Dominance Thompson Sampling':
-            self.test_cases.append(fair_sd_ts.FairStochasticDominance(bandits, self.T, e1, e2,
-                                                                      delta, lam, distance))
-        else:
-            print 'Unknown Method'
-
-        self.test_cases[-1].analyse(self.n_iterations)
 
     def print_result(self):
         for test in self.test_cases:
