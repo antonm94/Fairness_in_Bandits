@@ -24,34 +24,41 @@ class FairStochasticDominance(BernStochasticDominance, BernThompsonSampling):
         self.rounds_exploiting = 0
 
     def run(self):
+        exploiting = False
         for t in range(self.T):
             if np.random.binomial(1, [self.lam])[0]:
                 # O(t)={i:n_j,i(t) <=C(e2,delta)}
 
                 o = set()
-                for i in range(self.k):
-                    if t > 0:
-                        if self.n[t-1, i] <= c_alg2(self.e2, self.delta, self.bandits.get_mean(), i, self.k):
-                             o.add(i)
-                    else:
-                        o.add(i)
+                if not exploiting:
+                    for i in range(self.k):
+                        if t > 0:
+                            if self.n[t-1, i] <= c_alg2(self.e2, self.delta, self.bandits.get_mean(), i, self.k):
+                                 o.add(i)
+                        else:
+                            o.add(i)
+                    if len(o) == 0:
+                        exploiting = True
 
-                if len(o) == 0:
+                if exploiting:
                     # exploition
-                    BernStochasticDominance.get_a(self)
+
+                    self.rounds_exploiting = self.rounds_exploiting + 1
+                    self.theta[t] = np.random.beta(self.s, self.f, self.k)
+                    a = BernStochasticDominance.get_a(self,  t)
 
                 else:
                     # exploration
                     self.rounds_exploring = self.rounds_exploring + 1
-                    if self.mod:
-                        a = np.random.choice(tuple(o))
-                        p = 1. / len(o)
-                        for i in o:
-                            self.pi[t][i] = p
+                    # if self.mod:
+                    #     a = np.random.choice(tuple(o))
+                    #     p = 1. / len(o)
+                    #     for i in o:
+                    #         self.pi[t][i] = p
+                    #     print self.pi[t]
 
-                    else:
-                        a = np.random.choice(self.k)
-                        self.pi[t] = np.full(self.k, 1. / self.k)
+                    a = np.random.choice(self.k)
+                    self.pi[t] = np.full(self.k, 1. / self.k)
 
             else:
                 a = BernThompsonSampling.get_a(self, t)
@@ -60,5 +67,6 @@ class FairStochasticDominance(BernStochasticDominance, BernThompsonSampling):
             reward = self.bandits.pull(a)
 
             BernStochasticDominance.update(self, t, a, reward)
-
+        print self.rounds_exploring
+        print self.rounds_exploiting
 
