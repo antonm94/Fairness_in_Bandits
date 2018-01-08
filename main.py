@@ -21,8 +21,8 @@ if __name__ == '__main__':
 
     T = 1000
     e1 = [2]
-    e2 = [0.00001]
-    delta = [0.001]
+    e2 = [1, 3]
+    delta = [0.1]
     lam = [1]
     #
 
@@ -50,8 +50,8 @@ if __name__ == '__main__':
     test = FairSDTest(N_ITERATIONS, bandits, T, e1, e2, delta, lam[0], distance=total_variation_distance)
     test.analyse()
 
-    print test.average_regret[0][0][T-1]
-    print test.average_fairness_regret[0][0][-1]
+    print test.average_regret[0][:]
+    print np.sum(test.average_fairness_regret[0][:])
     # print test.average_fairness_regret[0][0][-1]
     # print test.average_smooth_fair[0][0][0][-1]
     # print test.average_not_smooth_fair[0][0][0][-1]
