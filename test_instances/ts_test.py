@@ -22,6 +22,18 @@ class TSTest:
         self.average_fairness_regret = np.zeros(T)
         self.average_regret = np.zeros(T)
         self.average_n = np.zeros((self.T, self.k))
+        self.name = 'Thomspon Sampling'
+        self.lam = 0
+
+    def get_name(self, e1=-1, e2=-1, delta=-1):
+        s = self.name
+        if not e1 == -1:
+            s = s + ' e1={}'.format(e1)
+        if not e2 == -1:
+            s = s + ' e2={}'.format(e2)
+        if not delta == -1:
+            s = s + ' delta={}'.format(delta)
+        return s
 
     def calc_smooth_fairness(self, e1, e2):
         not_smooth_fair = np.zeros(self.T)

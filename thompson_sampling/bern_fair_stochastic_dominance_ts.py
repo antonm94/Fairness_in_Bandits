@@ -25,11 +25,12 @@ class FairStochasticDominance(BernStochasticDominance, BernThompsonSampling):
 
     def run(self):
         o = np.ones(self.k)
+        exploiting = False
         for t in range(self.T):
 
             if np.random.binomial(1, [self.lam])[0]:
                 # empty dict evaluate to false
-                if np.sum(o) == 0:
+                if exploiting:
                     # exploition
 
                     self.rounds_exploiting = self.rounds_exploiting + 1
@@ -58,6 +59,7 @@ class FairStochasticDominance(BernStochasticDominance, BernThompsonSampling):
             BernStochasticDominance.update(self, t, a, reward)
             if o[a] == 1 and (self.n[t, a] > c_alg2(self.e2, self.delta, self.bandits.get_mean(), a, self.k)):
                 o[a] = 0
-        # print self.rounds_exploring
-        # print self.rounds_exploiting
+                if np.sum(o) == 0:
+                    exploiting = True
+
 
