@@ -36,7 +36,7 @@ if __name__ == '__main__':
     test.print_result(test_cases)
     test.plot_fairness_regret(test_cases)
     test.plot_average_total_regret(test_cases)
-
+    test.plot_smooth_fairness(test_cases)
 
     # test1 = TSTest(bandits, METHODS, N_ITERATIONS, T, e1, e2, delta, lam)
     # test1.add_test_case(bandits, 'Fair Stochastic Dominance Thompson Sampling', e1, e2, delta, mod=1)

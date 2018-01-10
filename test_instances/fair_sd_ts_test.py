@@ -1,10 +1,11 @@
 import thompson_sampling.bern_fair_stochastic_dominance_ts as fair_sd_ts
 from ts_test import TSTest
 import numpy as np
+from distance import total_variation_distance
 
 
 class FairSDTest(TSTest):
-    def __init__(self, n_iter, bandits, T, e1_arr, e2_arr, delta_arr, lam, distance):
+    def __init__(self, n_iter, bandits, T, e1_arr, e2_arr, delta_arr, lam=1, distance=total_variation_distance):
         TSTest.__init__(self, n_iter, bandits, T, e1_arr, e2_arr, delta_arr, distance)
         self.test_cases = np.empty((len(e2_arr), len(delta_arr)), object)
         for i in range(len(e2_arr)):
@@ -22,7 +23,7 @@ class FairSDTest(TSTest):
 
 
     def get_rounds(self):
-        return self.rounds_exploring, self.rounds_exploiting
+        return self.average_rounds_exploring, self.average_rounds_exploiting
 
 
     def get_regret(self):
@@ -33,7 +34,7 @@ class FairSDTest(TSTest):
                 regret[j][d] = np.apply_along_axis(lambda x: sum(x * distance_to_max), 1, self.average_n[j][d])
         return regret
 
-    def analyse(self):
+    def analyse(self, regret=True, fair_regret=True, smooth_fair = True, e2_times=1):
 
         for it in range(int(self.n_iter)):
             for j in range(len(self.e2_arr)):
@@ -42,20 +43,26 @@ class FairSDTest(TSTest):
                     self.curr_test.run()
                     self.average_rounds_exploiting[j][d] += self.curr_test.rounds_exploiting
                     self.average_rounds_exploring[j][d] += self.curr_test.rounds_exploring
-                    self.calc_fairness_regret()
-                    self.average_fairness_regret[j][d] += self.calc_fairness_regret()
+                    if regret:
+                        self.calc_fairness_regret()
+                    if fair_regret:
+                        self.average_fairness_regret[j][d] += self.calc_fairness_regret()
                     self.average_n[j][d] += self.curr_test.n
-                    for i in range(len(self.e1_arr)):
-                        smooth = self.calc_smooth_fairness(self.e1_arr[i], self.e2_arr[j])
-                        self.average_smooth_fair[i][j][d] += smooth[1]
-                        self.average_not_smooth_fair[i][j][d] += smooth[0]
+                    if smooth_fair:
+                        for i in range(len(self.e1_arr)):
+                            smooth = self.calc_smooth_fairness(self.e1_arr[i], e2_times * self.e2_arr[j])
+                            self.average_smooth_fair[i][j][d] += smooth[1]
+                            self.average_not_smooth_fair[i][j][d] += smooth[0]
                     self.curr_test.reset()
 
         self.average_n = np.divide(self.average_n, self.n_iter)
-        self.average_regret = self.get_regret()
-        self.average_fairness_regret = np.divide(self.average_fairness_regret, self.n_iter)
-        self.average_smooth_fair = np.divide(self.average_smooth_fair, self.n_iter)
-        self.average_not_smooth_fair = np.divide(self.average_not_smooth_fair, self.n_iter)
+        if fair_regret:
+                self.average_regret = self.get_regret()
+        if fair_regret:
+            self.average_fairness_regret = np.divide(self.average_fairness_regret, self.n_iter)
+        if smooth_fair:
+            self.average_smooth_fair = np.divide(self.average_smooth_fair, self.n_iter)
+            self.average_not_smooth_fair = np.divide(self.average_not_smooth_fair, self.n_iter)
         self.average_rounds_exploring = np.divide(self.average_rounds_exploring, self.n_iter)
         self.average_rounds_exploiting = np.divide(self.average_rounds_exploiting, self.n_iter)
 

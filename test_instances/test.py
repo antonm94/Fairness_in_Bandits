@@ -135,15 +135,15 @@ def plot_smooth_fairness(test_cases):
     x = range(test_cases[0].T)
     for test in test_cases:
         if test.name == 'Fair SD TS':
-            for i in range(len(test.not_average_smooth_fair)):
-                for j in range(len(test.not_average_smooth_fair[i])):
-                    for d in range(len(test.not_average_smooth_fair[i][j])):
-                        plt.plot(x, test.average_not_smooth_fair[i][j][d], label=test.get_name(test.e1_arr[i],
+            for i in range(len(test.average_not_smooth_fair)):
+                for j in range(len(test.average_not_smooth_fair[i])):
+                    for d in range(len(test.average_not_smooth_fair[i][j])):
+                        plt.plot(x, np.add.accumulate(test.average_not_smooth_fair[i][j][d]), label=test.get_name(test.e1_arr[i],
                                                                                                test.e2_arr[j], test.delta_arr[d]))
         else:
-            for i in range(len(test.not_average_smooth_fair)):
-                for j in range(len(test.not_average_smooth_fair[i])):
-                 plt.plot(x, test.average_not_smooth_fair[i][j], label=test.get_name( test.e1_arr[i], test.e2_arr[j]))
+            for i in range(len(test.average_not_smooth_fair)):
+                for j in range(len(test.average_not_smooth_fair[i])):
+                 plt.plot(x, np.add.accumulate(test.average_not_smooth_fair[i][j]), label=test.get_name( test.e1_arr[i], test.e2_arr[j]))
 
 
     for delta in test.delta_arr:
