@@ -20,9 +20,9 @@ METHODS = TEST_THOMPSON*['Thompson Sampling'] + TEST_SD_TS*['Stochastic Dominanc
 if __name__ == '__main__':
     bandits = load_data(DATA_SET)
 
-    T = 1000
-    e1 = [2, 1]
-    e2 = [0.01, 0.2]
+    T = 20
+    e1 = [2]
+    e2 = [2]
     delta = [0.1]
     lam = [1]
 
@@ -31,12 +31,11 @@ if __name__ == '__main__':
     test1 = SDTest(N_ITERATIONS, bandits, T, e1, e2, delta, lam[0], distance=total_variation_distance)
     test1.analyse()
     test2 = FairSDTest(N_ITERATIONS, bandits, T, e1, e2, delta, lam[0], distance=total_variation_distance)
-    test2.analyse()
+    test2.analyse(e2_times=1)
     test_cases = [test0, test1, test2]
-    test.print_result(test_cases)
-    test.plot_fairness_regret(test_cases)
-    test.plot_average_total_regret(test_cases)
-    test.plot_smooth_fairness(test_cases)
+    print test0.smooth_fair
+    print test1.smooth_fair
+    print test2.smooth_fair
 
     # test1 = TSTest(bandits, METHODS, N_ITERATIONS, T, e1, e2, delta, lam)
     # test1.add_test_case(bandits, 'Fair Stochastic Dominance Thompson Sampling', e1, e2, delta, mod=1)

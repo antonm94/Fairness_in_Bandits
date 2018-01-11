@@ -12,8 +12,6 @@ class FairSDTest(TSTest):
             for d in range(len(delta_arr)):
                 self.test_cases[i][d] = fair_sd_ts.FairStochasticDominance(bandits, T, e2_arr[i], delta_arr[d], lam, distance)
         self.curr_test = self.test_cases[0][0]
-        self.average_smooth_fair = np.zeros((len(e1_arr), len(e2_arr), len(delta_arr), self.T,))
-        self.average_not_smooth_fair = np.zeros((len(e1_arr), len(e2_arr), len(delta_arr), self.T,))
         self.average_fairness_regret = np.zeros((len(e2_arr), len(delta_arr), T))
         self.average_n = np.zeros((len(e2_arr), len(delta_arr), self.T, self.k))
         self.average_rounds_exploring = np.zeros((len(e2_arr), len(delta_arr)))
@@ -50,9 +48,8 @@ class FairSDTest(TSTest):
                     self.average_n[j][d] += self.curr_test.n
                     if smooth_fair:
                         for i in range(len(self.e1_arr)):
-                            smooth = self.calc_smooth_fairness(self.e1_arr[i], e2_times * self.e2_arr[j])
-                            self.average_smooth_fair[i][j][d] += smooth[1]
-                            self.average_not_smooth_fair[i][j][d] += smooth[0]
+                            self.calc_smooth_fairness(i, j, e2_times)
+
                     self.curr_test.reset()
 
         self.average_n = np.divide(self.average_n, self.n_iter)
@@ -60,9 +57,9 @@ class FairSDTest(TSTest):
                 self.average_regret = self.get_regret()
         if fair_regret:
             self.average_fairness_regret = np.divide(self.average_fairness_regret, self.n_iter)
-        if smooth_fair:
-            self.average_smooth_fair = np.divide(self.average_smooth_fair, self.n_iter)
-            self.average_not_smooth_fair = np.divide(self.average_not_smooth_fair, self.n_iter)
+        # if smooth_fair:
+        #     self.average_smooth_fair = np.divide(self.average_smooth_fair, self.n_iter)
+        #     self.average_not_smooth_fair = np.divide(self.average_not_smooth_fair, self.n_iter)
         self.average_rounds_exploring = np.divide(self.average_rounds_exploring, self.n_iter)
         self.average_rounds_exploiting = np.divide(self.average_rounds_exploiting, self.n_iter)
 
