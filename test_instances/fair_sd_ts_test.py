@@ -2,6 +2,7 @@ import thompson_sampling.bern_fair_stochastic_dominance_ts as fair_sd_ts
 from ts_test import TSTest
 import numpy as np
 from distance import total_variation_distance
+from fairness_calc import smooth_fairness
 
 
 class FairSDTest(TSTest):
@@ -18,7 +19,7 @@ class FairSDTest(TSTest):
         self.average_rounds_exploiting = np.zeros((len(e2_arr), len(delta_arr)))
         self.lam = lam
         self.name = 'Fair SD TS'
-
+        self.smooth_fair = np.zeros((len(e1_arr), len(e2_arr), len(delta_arr), self.T, self.k, self.k))
 
     def get_rounds(self):
         return self.average_rounds_exploring, self.average_rounds_exploiting
@@ -31,6 +32,28 @@ class FairSDTest(TSTest):
             for d in range(len(self.delta_arr)):
                 regret[j][d] = np.apply_along_axis(lambda x: sum(x * distance_to_max), 1, self.average_n[j][d])
         return regret
+
+    def calc_smooth_fairness(self, e1_ind, e2_ind, d, e2_times=1):
+
+        for t in range(self.T):
+            for i in range(self.k):
+                # for j in range(i + 1, self.k):
+                for j in range(self.k):
+                    # self.r_theta = np.full(k, 0.5)+k[t] n[t]
+
+                    self.smooth_fair[e1_ind][e2_ind][d][t][i][j] += smooth_fairness(self.e1_arr[e1_ind],
+                                                                                 e2_times * self.e2_arr[e2_ind]
+                                                                                 , i, j, self.curr_test.theta[t],
+                                                                                 self.r_theta, self.distance)
+
+    def frac_smooth_fair(self):
+        for e1_ind in range(len(self.e1_arr)):
+            for e2_ind in range(len(self.e2_arr)):
+                for delta_ind in range(len(self.delta_arr)):
+                   # print (np.divide(self.smooth_fair[e1_ind][e2_ind], self.n_iter) >= 1 - self.delta_arr[delta_ind])
+                    self.is_smooth_fair[e1_ind][e2_ind][delta_ind] = np.all(np.divide(self.smooth_fair[e1_ind][e2_ind]
+                                                                                      [delta_ind], self.n_iter) >= 1 -
+                                                                            self.delta_arr[delta_ind])
 
     def analyse(self, regret=True, fair_regret=True, smooth_fair = True, e2_times=1):
 
@@ -48,7 +71,7 @@ class FairSDTest(TSTest):
                     self.average_n[j][d] += self.curr_test.n
                     if smooth_fair:
                         for i in range(len(self.e1_arr)):
-                            self.calc_smooth_fairness(i, j, e2_times)
+                           self.calc_smooth_fairness(i, j, d, e2_times)
 
                     self.curr_test.reset()
 
