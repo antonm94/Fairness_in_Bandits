@@ -1,12 +1,12 @@
 from fairness_calc import smooth_fairness
-import thompson_sampling.stochastic_dominance as sd_ts
+import thompson_sampling.bern_ts as ts
 import numpy as np
 from distance import total_variation_distance
 
 
 class TSTest:
     def __init__(self, n_iter, bandits, T, e1_arr, e2_arr, delta_arr, distance=total_variation_distance):
-        self.curr_test = sd_ts.StochasticDominance(bandits, T, lam=0, distance=distance)
+        self.curr_test = ts.BernThompsonSampling(bandits, T)
         self.n_iter = n_iter
         self.bandits = bandits
         self.k = bandits.k
@@ -49,6 +49,19 @@ class TSTest:
                     self.smooth_fair[e1_ind][e2_ind][t][i][j] += smooth_fairness(self.e1_arr[e1_ind], e2_times*self.e2_arr[e2_ind]
                                                                                  , i, j, self.curr_test.theta[t], self.r_theta, self.distance)
 
+
+    def calc_subjective_smooth_fairness(self, e1_ind, e2_ind, e2_times=1):
+
+        for t in range(self.T):
+
+            for i in range(self.k):
+                #for j in range(i + 1, self.k):
+                for j in range(self.k):
+
+                 # self.r_theta = np.full(k, 0.5)+k[t] n[t]
+
+                        self.smooth_fair[e1_ind][e2_ind][t][i][j] += smooth_fairness(self.e1_arr[e1_ind], e2_times*self.e2_arr[e2_ind], i, j, self.curr_test.pi[t], self.curr_test.r_1_h[t], self.distance)
+
     def frac_smooth_fair(self):
         for e1_ind in range(len(self.e1_arr)):
             for e2_ind in range(len(self.e2_arr)):
@@ -56,6 +69,8 @@ class TSTest:
                     #print (np.divide(self.smooth_fair[e1_ind][e2_ind], self.n_iter) >= 1-self.delta_arr[delta_ind])
                     self.is_smooth_fair[e1_ind][e2_ind][delta_ind] = np.all(np.divide(self.smooth_fair[e1_ind][e2_ind],
                                                                                       self.n_iter) >= 1-self.delta_arr[delta_ind])
+
+
 
 
 
@@ -75,7 +90,7 @@ class TSTest:
         distance_to_max = max(self.r_theta) - self.r_theta
         return np.apply_along_axis(lambda x: np.sum(x * distance_to_max), 1, self.average_n)
 
-    def analyse(self, regret=True, fair_regret=True, smooth_fair = True):
+    def analyse(self, regret=True, fair_regret=True, smooth_fair = True, subjective_smooth_fair = False):
         for it in range(int(self.n_iter)):
 
             self.curr_test.run()
@@ -86,6 +101,12 @@ class TSTest:
                 for i in range(len(self.e1_arr)):
                     for j in range(len(self.e2_arr)):
                         self.calc_smooth_fairness(i, j)
+
+            if subjective_smooth_fair:
+                for i in range(len(self.e1_arr)):
+                    for j in range(len(self.e2_arr)):
+                        self.calc_subjective_smooth_fairness(i, j)
+
             self.curr_test.reset()
 
         self.average_n = np.divide(self.average_n, self.n_iter)

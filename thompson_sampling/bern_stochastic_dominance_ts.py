@@ -1,5 +1,5 @@
 import numpy as np
-from bern_thompson_sampling import BernThompsonSampling
+from bern_ts import BernThompsonSampling
 
 
 class BernStochasticDominance(BernThompsonSampling):
@@ -10,7 +10,7 @@ class BernStochasticDominance(BernThompsonSampling):
 
     def run(self):
         for t in range(self.T):
-            self.theta[t] = np.random.beta(self.s, self.f, self.k)
+            self.theta[t] = np.random.beta(self.s[t], self.f[t], self.k)
 
             if np.random.binomial(1, [self.lam])[0]:
                 a = self.get_a(t)

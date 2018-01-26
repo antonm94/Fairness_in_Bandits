@@ -11,7 +11,7 @@ class FairSDTest(TSTest):
         self.test_cases = np.empty((len(e2_arr), len(delta_arr)), object)
         for i in range(len(e2_arr)):
             for d in range(len(delta_arr)):
-                self.test_cases[i][d] = fair_sd_ts.FairStochasticDominance(bandits, T, e2_arr[i], delta_arr[d], lam, distance)
+                self.test_cases[i][d] = fair_sd_ts.BernFairStochasticDominance(bandits, T, e2_arr[i], delta_arr[d], lam, distance)
         self.curr_test = self.test_cases[0][0]
         self.average_fairness_regret = np.zeros((len(e2_arr), len(delta_arr), T))
         self.average_n = np.zeros((len(e2_arr), len(delta_arr), self.T, self.k))

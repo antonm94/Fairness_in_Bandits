@@ -6,9 +6,9 @@ from calc_c import c_alg2
 from fairness_calc import smooth_fairness
 
 from bern_stochastic_dominance_ts import BernStochasticDominance
-from bern_thompson_sampling import BernThompsonSampling
+from bern_ts import BernThompsonSampling
 
-class FairStochasticDominance(BernStochasticDominance, BernThompsonSampling):
+class BernFairStochasticDominance(BernStochasticDominance, BernThompsonSampling):
 
     def __init__(self, bandits, T, e2, delta, lam=1, mod=0):
         BernStochasticDominance.__init__(self, bandits, T, lam)
@@ -34,7 +34,7 @@ class FairStochasticDominance(BernStochasticDominance, BernThompsonSampling):
                     # exploition
 
                     self.rounds_exploiting = self.rounds_exploiting + 1
-                    self.theta[t] = np.random.beta(self.s, self.f, self.k)
+                    self.theta[t] = np.random.beta(self.s[t], self.f[t], self.k)
                     a = BernStochasticDominance.get_a(self,  t)
 
                 else:

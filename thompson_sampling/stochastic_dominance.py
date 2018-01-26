@@ -8,12 +8,14 @@ class StochasticDominance(object):
     def __init__(self, bandits, T, lam=1, distance=total_variation_distance, mod=0):
         self.k = bandits.k
         self.arm = bandits.arms
+        self.alpha = 0.5
+        self.beta = 0.5
         self.T = T
         self.lam = lam
         self.mod = mod
         self.distance = distance
-        self.s = np.full(self.k, .5)
-        self.f = np.full(self.k, .5)
+        self.s = np.full((self.T, self.k), self.alpha)
+        self.f = np.full((self.T, self.k), self.beta)
         self.theta = np.zeros((self.T, self.k))
         self.n = np.zeros((self.T, self.k))
         self.pi = np.zeros((self.T,self.k))
@@ -27,8 +29,8 @@ class StochasticDominance(object):
                         ' with Lambda = {}'.format(self.lam)
 
     def reset(self):
-        self.s = np.full(self.k, .5)
-        self.f = np.full(self.k, .5)
+        self.s = np.full((self.T, self.k), self.alpha)
+        self.f = np.full((self.T, self.k), self.beta)
         self.n = np.zeros((self.T, self.k))
 
     def run(self):
