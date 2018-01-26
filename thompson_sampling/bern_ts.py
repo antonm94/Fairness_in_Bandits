@@ -1,6 +1,8 @@
 import numpy as np
-
+import calculations
+import itertools
 class BernThompsonSampling(object):
+
 
     def __init__(self, bandits, T):
         self.k = bandits.k
@@ -9,19 +11,19 @@ class BernThompsonSampling(object):
         self.prior_a = 0.5
         self.prior_b = 0.5
 
-        self.s = np.full((self.T, self.k), self.prior_a)
-        self.f = np.full((self.T, self.k), self.prior_b)
+        self.s = np.full((self.T+1, self.k), self.prior_a)
+        self.f = np.full((self.T+1, self.k), self.prior_b)
         self.theta = np.zeros((self.T, self.k))
         self.n = np.zeros((self.T, self.k))
         self.pi = np.zeros((self.T, self.k))
-        self.r_1_h = np.full((self.T, self.k), .5)
-        self.r_0_h = np.full((self.T, self.k), .5)
+        self.r_h = np.full((self.T, self.k), .5)
+
 
 
     def reset(self):
 
-        self.s = np.full((self.T, self.k), .5)
-        self.f = np.full((self.T, self.k), .5)
+        self.s = np.full((self.T+1, self.k), .5)
+        self.f = np.full((self.T+1, self.k), .5)
         self.n = np.zeros((self.T, self.k))
 
     def run(self):
@@ -33,14 +35,12 @@ class BernThompsonSampling(object):
             reward = self.bandits.pull(a)
             self.update(t, a, reward)
 
+        self.calc_r_h()
+        self.calc_pi()
+
     def get_a(self, t):
         max_theta = np.where(self.theta[t] == self.theta[t].max())[0]
         a = np.random.choice(max_theta)
-        for i in range(self.k):
-            if i in max_theta:
-                self.pi[t][i] = 1. / len(max_theta)
-            else:
-                self.pi[t][i] = 0.
 
         return a
 
@@ -48,32 +48,59 @@ class BernThompsonSampling(object):
 
     def update(self, t, a, reward):
 
-        if t > 0:
-            self.n[t] = self.n[t - 1]
-            self.s[t] = self.s[t - 1]
-            self.f[t] = self.f[t - 1]
-            self.r_1_h[t] = np.divide(self.s[t], self.f[t] + self.s[t])
-            self.r_0_h[t] = np.divide(self.f[t], self.f[t] + self.s[t])
-        #
+
+        if t>0:
+            self.n[t] = self.n[t-1]
+
+
+
+        self.s[t+1] = self.s[t]
+        self.f[t+1] = self.f[t]
+        if reward:
+            self.s[t + 1][a] = self.s[t+1][a] + 1
+        else:
+            self.f[t + 1][a] = self.f[t+1][a] + 1
+
         # sum_r = np.sum(self.r_1_h[t])
         # prod_r = np.prod(self.r_1_h[t])
         # for i in range(self.k):
         #     self.pi[t][i] = self.r_1_h[t][i] / (sum_r - self.r_1_h[t][i]) + prod_r
 
 
-        self.pi[t] = self.r_1_h[t] / np.sum(self.r_1_h[t])
+       # self.pi[t] = self.r_1_h[t] / np.sum(self.r_1_h[t])
 
         self.n[t][a] = self.n[t][a] + 1
-        if reward:
-            self.s[t][a] = self.s[t][a] + 1
-        else:
-            self.f[a] = self.f[t][a] + 1
+
+
+    def calc_r_h(self):
+
+        self.r_h = np.divide(self.s[:self.T], self.s[:self.T] + self.f[:self.T])
+
+    def get_r(self, perm, t):
+        r_prop = []
+        for i in range(self.k):
+            if perm[i]:
+                r_prop.append(self.r_h[t][i])
+            else:
+                r_prop.append(1-self.r_h[t][i])
+
+        return r_prop
 
 
 
+    def calc_pi(self):
+        # r := binary reward vector
+        r_permutations = [np.asarray(seq, dtype=np.int8) for seq in itertools.product("01", repeat=self.k)]
+        r_sum = [np.count_nonzero(r_permutations[perm_i]) for perm_i in range(len(r_permutations))]
 
+        perm_prod = np.zeros((self.T, len(r_permutations)))
+        for t in range(self.T):
+            for perm_i in range(len(r_permutations)):
+                perm_prod[t][perm_i] = np.prod(self.get_r(r_permutations[perm_i], t))
 
-    # def calc_pi(self):
-    #     for t in range(self.T):
-    #         for k in range(self.k):
-    #         self.pi[t][k] =
+            for a in range(self.k):
+                for perm_i in range(len(r_permutations)):
+                    if r_permutations[perm_i][a]:
+                        self.pi[t][a] += perm_prod[t][perm_i]/r_sum[perm_i]
+                    elif not r_sum[perm_i]:
+                        self.pi[t][a] += perm_prod[t][perm_i]/self.k

@@ -19,9 +19,11 @@ class BernStochasticDominance(BernThompsonSampling):
 
             reward = self.bandits.pull(a)
             BernThompsonSampling.update(self, t, a, reward)
+        self.calc_r_h()
+        self.calc_pi()
+
 
     def get_a(self, t):
-        self.pi[t] = self.theta[t] / sum(self.theta[t])
         # guessed bernoulli reward for each arm
         guessed_r = np.random.binomial(1, self.theta[t])
         # selected arm with random tie - breaking

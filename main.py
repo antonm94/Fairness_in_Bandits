@@ -79,18 +79,17 @@ if __name__ == '__main__':
     # METHODS = TEST_THOMPSON * ['Thompson Sampling'] + TEST_SD_TS * [
     #     'Stochastic Dominance Thompson Sampling'] + TEST_FAIR_SD_TS * ['Fair Stochastic Dominance Thompson Sampling']
     # print METHODS
-    N_ITERATIONS = 100.
+    N_ITERATIONS = 10.
     DATA_SET = ['Bar Exam', 'Default on Credit'][0]
     bandits = load_data(DATA_SET)
-    T = 100
+    T = 10
     e1 = [2.]
     e2 = [0.]
     delta = [0.]
 
     sd_test = SDTest(N_ITERATIONS, bandits, T, e1, e2, delta, lam=1, distance=total_variation_distance)
     sd_test.analyse(fair_regret=False, regret=False, subjective_smooth_fair=True, smooth_fair=False)
-    print sd_test.smooth_fair
-    sd_test.frac_smooth_fair()
-
+    sd_test.calc_frac_is_smooth_fair()
+    print sd_test.frac_smooth_fair
     print sd_test.is_smooth_fair
 

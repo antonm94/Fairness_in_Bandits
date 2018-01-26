@@ -20,7 +20,9 @@ class TSTest:
         self.p_star = [float(i) / sum(self.r_theta) for i in self.r_theta]
        # self.average_smooth_fair = np.zeros((len(e1_arr), len(e2_arr), self.T))
         self.smooth_fair = np.zeros((len(e1_arr), len(e2_arr), self.T, self.k, self.k))
-        self.is_smooth_fair = np.zeros((len(e1_arr), len(e2_arr), len(delta_arr)))
+        self.is_smooth_fair = np.ones((self.T, len(e1_arr), len(e2_arr), len(delta_arr)))
+        self.frac_smooth_fair = np.ones((self.T, len(e1_arr), len(e2_arr),  self.k, self.k))
+
        # self.average_not_smooth_fair = np.zeros((len(e1_arr), len(e2_arr), self.T))
         self.average_fairness_regret = np.zeros(T)
         self.average_regret = np.zeros(T)
@@ -51,26 +53,26 @@ class TSTest:
 
 
     def calc_subjective_smooth_fairness(self, e1_ind, e2_ind, e2_times=1):
-
         for t in range(self.T):
-
             for i in range(self.k):
                 #for j in range(i + 1, self.k):
                 for j in range(self.k):
 
                  # self.r_theta = np.full(k, 0.5)+k[t] n[t]
 
-                        self.smooth_fair[e1_ind][e2_ind][t][i][j] += smooth_fairness(self.e1_arr[e1_ind], e2_times*self.e2_arr[e2_ind], i, j, self.curr_test.pi[t], self.curr_test.r_1_h[t], self.distance)
+                        self.smooth_fair[e1_ind][e2_ind][t][i][j] += smooth_fairness(self.e1_arr[e1_ind], e2_times*self.e2_arr[e2_ind], i, j, self.curr_test.pi[t], self.curr_test.r_h[t], self.distance)
 
-    def frac_smooth_fair(self):
-        for e1_ind in range(len(self.e1_arr)):
-            for e2_ind in range(len(self.e2_arr)):
-                for delta_ind in range(len(self.delta_arr)):
-                    #print (np.divide(self.smooth_fair[e1_ind][e2_ind], self.n_iter) >= 1-self.delta_arr[delta_ind])
-                    self.is_smooth_fair[e1_ind][e2_ind][delta_ind] = np.all(np.divide(self.smooth_fair[e1_ind][e2_ind],
-                                                                                      self.n_iter) >= 1-self.delta_arr[delta_ind])
+    def calc_frac_is_smooth_fair(self):
+        for t in range(1, self.T):
+            for e1_ind in range(len(self.e1_arr)):
+                for e2_ind in range(len(self.e2_arr)):
 
-
+                        self.frac_smooth_fair[t][e1_ind][e2_ind] = np.divide(self.smooth_fair[e1_ind][e2_ind][t], self.n_iter)
+                        for delta_ind in range(len(self.delta_arr)):
+                            b = (self.frac_smooth_fair[t][e1_ind][e2_ind] >= 1 - self.delta_arr[delta_ind])
+                            self.is_smooth_fair[t][e1_ind][e2_ind][delta_ind] = np.all(b) and \
+                                                                            self.is_smooth_fair[t - 1][e1_ind][e2_ind][
+                                                                                delta_ind]
 
 
 
