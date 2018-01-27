@@ -1,10 +1,12 @@
 import pandas as pd
 import numpy as np
 import bandits
+import os
+path = os.path.dirname(os.path.abspath(__file__))
 
 
 def bar_exam_data():
-    df = pd.read_sas('./DataSets/LawSchool/BarPassage/LSAC_SAS/lsac.sas7bdat')
+    df = pd.read_sas(path +'/DataSets/LawSchool/BarPassage/LSAC_SAS/lsac.sas7bdat')
     bar = df[['ID', 'sex', 'race1', 'pass_bar' , 'bar']]
     bar = bar.dropna()
     race_grouped = bar[['race1','pass_bar']].groupby('race1')
@@ -19,7 +21,7 @@ def bar_exam_data():
 
 
 def default_credit_data():
-    df = pd.read_excel('./DataSets/Default/default.xls')
+    df = pd.read_excel(path +'./DataSets/Default/default.xls')
     sex_default = df[['X2','Y']][1:]
     sex_default_grouped = sex_default.groupby('X2')
     arm = np.empty((2,), dtype=object)
@@ -35,7 +37,7 @@ def adult_data():
                     'capital_gain', 'capital_loss', 'hours_per_week','native_country', 'income_class']
 
 
-    df = pd.read_csv('./DataSets/Adult/adult.data.csv', names = column_names)
+    df = pd.read_csv(path +'./DataSets/Adult/adult.data.csv', names = column_names)
 
     df['income_class'] = df['income_class'].astype('str')
     df = df.replace({'income_class': {df['income_class'][7]: 1, df['income_class'][0]: 0}})

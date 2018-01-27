@@ -79,11 +79,11 @@ if __name__ == '__main__':
     # METHODS = TEST_THOMPSON * ['Thompson Sampling'] + TEST_SD_TS * [
     #     'Stochastic Dominance Thompson Sampling'] + TEST_FAIR_SD_TS * ['Fair Stochastic Dominance Thompson Sampling']
     # print METHODS
-    N_ITERATIONS = 10.
+    N_ITERATIONS = 1000.
     DATA_SET = ['Bar Exam', 'Default on Credit'][0]
     bandits = load_data(DATA_SET)
     T = 10
-    e1 = [2.]
+    e1 = [1., 2.]
     e2 = [0.]
     delta = [0.]
 

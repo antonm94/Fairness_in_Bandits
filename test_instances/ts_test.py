@@ -59,7 +59,8 @@ class TSTest:
                 for j in range(self.k):
 
                  # self.r_theta = np.full(k, 0.5)+k[t] n[t]
-
+                 #        print self.curr_test.pi[t]
+                 #        print self.curr_test.r_h[t]
                         self.smooth_fair[e1_ind][e2_ind][t][i][j] += smooth_fairness(self.e1_arr[e1_ind], e2_times*self.e2_arr[e2_ind], i, j, self.curr_test.pi[t], self.curr_test.r_h[t], self.distance)
 
     def calc_frac_is_smooth_fair(self):

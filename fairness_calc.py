@@ -1,4 +1,4 @@
-
+from distance import total_variation_distance
 # def smooth_fairness(e1, e2, pi, r, distance):
 #     not_fair = 0
 #     fair = 0
@@ -20,10 +20,9 @@
 #
 #
 
-def smooth_fairness(e1, e2, i, j, pi, r, distance):
+def smooth_fairness(e1, e2, i, j, pi, r, distance=total_variation_distance):
     d_pi = distance([pi[i], 1 - pi[i]], [pi[j], 1 - pi[j]])
     d_r = distance([r[i], 1 - r[i]], [r[j], 1 - r[j]])
-
 
     if d_pi <= (e1 * d_r + e2):
         return 1

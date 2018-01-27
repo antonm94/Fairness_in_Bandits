@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import itertools
 
 class Bandits:
 
@@ -7,6 +8,7 @@ class Bandits:
         self.arms = arms
         self.k = len(arms)
         self.theta = self.get_mean()
+        p_star = self.calc_p_star()
 
     def get_mean(self):
         t = np.zeros(self.k)
@@ -16,3 +18,33 @@ class Bandits:
 
     def pull(self, a):
         return random.choice(self.arms[a])
+
+    def calc_p_star(self):
+        p_star = np.zeros(self.k)
+
+        r_permutations = [np.asarray(seq, dtype=np.int8) for seq in itertools.product("01", repeat=self.k)]
+        r_sum = [np.count_nonzero(r_permutations[perm_i]) for perm_i in range(len(r_permutations))]
+        perm_prod = np.zeros(len(r_permutations))
+        for perm_i in range(len(r_permutations)):
+            perm_prod[perm_i] = np.prod(self.get_r(r_permutations[perm_i]))
+
+        for a in range(self.k):
+            for perm_i in range(len(r_permutations)):
+                if r_permutations[perm_i][a]:
+                    p_star[a] += perm_prod[perm_i] / r_sum[perm_i]
+                elif not r_sum[perm_i]:
+                    p_star[a] += perm_prod[perm_i] / self.k
+
+        if sum(p_star) != 1.0:
+            print "p star doesn't sum to one"
+        return p_star
+
+    def get_r(self, perm):
+        r_prop = []
+        for i in range(self. k):
+            if perm[i]:
+                r_prop.append(self.theta[i])
+            else:
+                r_prop.append(1 - self.theta[i])
+
+        return r_prop

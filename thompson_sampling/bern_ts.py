@@ -21,7 +21,8 @@ class BernThompsonSampling(object):
 
 
     def reset(self):
-
+        self.pi = np.zeros((self.T, self.k))
+        self.r_h = np.full((self.T, self.k), .5)
         self.s = np.full((self.T+1, self.k), .5)
         self.f = np.full((self.T+1, self.k), .5)
         self.n = np.zeros((self.T, self.k))
@@ -104,3 +105,4 @@ class BernThompsonSampling(object):
                         self.pi[t][a] += perm_prod[t][perm_i]/r_sum[perm_i]
                     elif not r_sum[perm_i]:
                         self.pi[t][a] += perm_prod[t][perm_i]/self.k
+
