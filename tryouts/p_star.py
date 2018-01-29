@@ -23,7 +23,7 @@ if __name__ == '__main__':
     r_permutations = [np.asarray(seq, dtype=np.int8) for seq in itertools.product("01", repeat=k)]
     r_sum = [np.count_nonzero(r_permutations[perm_i]) for perm_i in range(len(r_permutations))]
     pi = np.zeros(k)
-    perm_prod = np.zeros( len(r_permutations))
+    perm_prod = np.zeros(len(r_permutations))
     for perm_i in range(len(r_permutations)):
         perm_prod[perm_i] = np.prod(get_r(r_permutations[perm_i], p))
 

@@ -18,12 +18,9 @@ class TSTest:
         self.n_iter = n_iter
         self.r_theta = bandits.theta
         self.p_star = [float(i) / sum(self.r_theta) for i in self.r_theta]
-       # self.average_smooth_fair = np.zeros((len(e1_arr), len(e2_arr), self.T))
         self.smooth_fair = np.zeros((len(e1_arr), len(e2_arr), self.T, self.k, self.k))
         self.is_smooth_fair = np.ones((self.T, len(e1_arr), len(e2_arr), len(delta_arr)))
         self.frac_smooth_fair = np.ones((self.T, len(e1_arr), len(e2_arr),  self.k, self.k))
-
-       # self.average_not_smooth_fair = np.zeros((len(e1_arr), len(e2_arr), self.T))
         self.average_fairness_regret = np.zeros(T)
         self.average_regret = np.zeros(T)
         self.average_n = np.zeros((self.T, self.k))
@@ -48,7 +45,7 @@ class TSTest:
                 for j in range(self.k):
                  # self.r_theta = np.full(k, 0.5)+k[t] n[t]
 
-                    self.smooth_fair[e1_ind][e2_ind][t][i][j] += smooth_fairness(self.e1_arr[e1_ind], e2_times*self.e2_arr[e2_ind]
+                    self.smooth_fair[e1_ind, e2_ind, t, i, j] += smooth_fairness(self.e1_arr[e1_ind], e2_times*self.e2_arr[e2_ind]
                                                                                  , i, j, self.curr_test.theta[t], self.r_theta, self.distance)
 
 
@@ -57,22 +54,15 @@ class TSTest:
             for i in range(self.k):
                 #for j in range(i + 1, self.k):
                 for j in range(self.k):
+                        self.smooth_fair[e1_ind,e2_ind,t,i,j] += smooth_fairness(self.e1_arr[e1_ind], e2_times*self.e2_arr[e2_ind], i, j, self.curr_test.pi[t], self.curr_test.r_h[t], self.distance)
 
-                 # self.r_theta = np.full(k, 0.5)+k[t] n[t]
-                 #        print self.curr_test.pi[t]
-                 #        print self.curr_test.r_h[t]
-                        self.smooth_fair[e1_ind][e2_ind][t][i][j] += smooth_fairness(self.e1_arr[e1_ind], e2_times*self.e2_arr[e2_ind], i, j, self.curr_test.pi[t], self.curr_test.r_h[t], self.distance)
-
-    def calc_frac_is_smooth_fair(self):
+    def calc_frac_is_smooth_fair(self, e1_ind, e2_ind):
         for t in range(1, self.T):
-            for e1_ind in range(len(self.e1_arr)):
-                for e2_ind in range(len(self.e2_arr)):
-
-                        self.frac_smooth_fair[t][e1_ind][e2_ind] = np.divide(self.smooth_fair[e1_ind][e2_ind][t], self.n_iter)
-                        for delta_ind in range(len(self.delta_arr)):
-                            b = (self.frac_smooth_fair[t][e1_ind][e2_ind] >= 1 - self.delta_arr[delta_ind])
-                            self.is_smooth_fair[t][e1_ind][e2_ind][delta_ind] = np.all(b) and \
-                                                                            self.is_smooth_fair[t - 1][e1_ind][e2_ind][
+                    self.frac_smooth_fair[t][e1_ind][e2_ind] = np.divide(self.smooth_fair[e1_ind][e2_ind][t], self.n_iter)
+                    for delta_ind in range(len(self.delta_arr)):
+                        b = (self.frac_smooth_fair[t][e1_ind][e2_ind] >= 1 - self.delta_arr[delta_ind])
+                        self.is_smooth_fair[t][e1_ind][e2_ind][delta_ind] = np.all(b) and \
+                                                                        self.is_smooth_fair[t - 1][e1_ind][e2_ind][
                                                                                 delta_ind]
 
 
@@ -83,11 +73,6 @@ class TSTest:
             fairness_regret[t] = sum([max(self.p_star[i] - self.curr_test.pi[t][i], 0.) for i in range(self.k)])
         return fairness_regret
 
-    # def get_not_fair_ratio(self):
-    #     return np.divide(self.average_not_smooth_fair, self.average_not_smooth_fair + self.average_smooth_fair)
-    #
-    # def get_fair_ratio(self):
-    #     return np.divide(self.average_smooth_fair, self.average_not_smooth_fair + self.average_smooth_fair)
 
     def get_regret(self):
         distance_to_max = max(self.r_theta) - self.r_theta
@@ -109,9 +94,16 @@ class TSTest:
                 for i in range(len(self.e1_arr)):
                     for j in range(len(self.e2_arr)):
                         self.calc_subjective_smooth_fairness(i, j)
-
+                        self.calc_frac_is_smooth_fair(i, j)
+                        # print self.curr_test.r_h
+                        # print self.curr_test.theta
+                        # print self.curr_test.pi
             self.curr_test.reset()
 
+        if subjective_smooth_fair:
+            for i in range(len(self.e1_arr)):
+                for j in range(len(self.e2_arr)):
+                    self.calc_frac_is_smooth_fair(i, j)
         self.average_n = np.divide(self.average_n, self.n_iter)
         if regret:
             self.average_regret = self.get_regret()

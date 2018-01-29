@@ -4,12 +4,12 @@ from test_instances.ts_test import TSTest
 from test_instances.fair_sd_ts_test import FairSDTest
 from test_instances.sd_ts_test import SDTest
 import numpy as np
-import test_instances.test as test
-
+import test_instances.plots as test
+import sys
 TEST_THOMPSON = 1
 TEST_SD_TS = 0
 TEST_FAIR_SD_TS = 0
-
+import random
 
 TEST = 0
 N_ITERATIONS = 10.
@@ -19,6 +19,7 @@ METHODS = TEST_THOMPSON*['Thompson Sampling'] + TEST_SD_TS*['Stochastic Dominanc
 
 if __name__ == '__main__':
     bandits = load_data(DATA_SET)
+
 
    #  T = 1000
    #  e1 = [0.0000001]
@@ -79,17 +80,19 @@ if __name__ == '__main__':
     # METHODS = TEST_THOMPSON * ['Thompson Sampling'] + TEST_SD_TS * [
     #     'Stochastic Dominance Thompson Sampling'] + TEST_FAIR_SD_TS * ['Fair Stochastic Dominance Thompson Sampling']
     # print METHODS
-    N_ITERATIONS = 1000.
+    N_ITERATIONS = 1.
     DATA_SET = ['Bar Exam', 'Default on Credit'][0]
     bandits = load_data(DATA_SET)
-    T = 10
-    e1 = [1., 2.]
+    T = 100
+    e1 = [2.]
     e2 = [0.]
     delta = [0.]
-
+    random.seed(0)
+    np.random.seed(0)
     sd_test = SDTest(N_ITERATIONS, bandits, T, e1, e2, delta, lam=1, distance=total_variation_distance)
     sd_test.analyse(fair_regret=False, regret=False, subjective_smooth_fair=True, smooth_fair=False)
-    sd_test.calc_frac_is_smooth_fair()
-    print sd_test.frac_smooth_fair
-    print sd_test.is_smooth_fair
+    #
+    # print sd_test.smooth_fair
+    # print sd_test.frac_smooth_fair
+    # print sd_test.is_smooth_fair
 

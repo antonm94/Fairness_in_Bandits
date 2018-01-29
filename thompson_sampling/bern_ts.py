@@ -1,6 +1,7 @@
 import numpy as np
 import calculations
 import itertools
+import math
 class BernThompsonSampling(object):
 
 
@@ -77,16 +78,25 @@ class BernThompsonSampling(object):
 
         self.r_h = np.divide(self.s[:self.T], self.s[:self.T] + self.f[:self.T])
 
+    def get_r_log(self, perm, t):
+        r_prop = []
+        for i in range(self.k):
+            if perm[i]:
+                r_prop.append(np.log(self.r_h[t][i]))
+            else:
+                r_prop.append(np.log(1.-self.r_h[t][i]))
+
+        return r_prop
+
     def get_r(self, perm, t):
         r_prop = []
         for i in range(self.k):
             if perm[i]:
                 r_prop.append(self.r_h[t][i])
             else:
-                r_prop.append(1-self.r_h[t][i])
+                r_prop.append(1.-self.r_h[t][i])
 
         return r_prop
-
 
 
     def calc_pi(self):
@@ -97,12 +107,18 @@ class BernThompsonSampling(object):
         perm_prod = np.zeros((self.T, len(r_permutations)))
         for t in range(self.T):
             for perm_i in range(len(r_permutations)):
+                #np.set_printoptions(100)
+                # print np.prod(self.get_r(r_permutations[perm_i], t))
+                # print np.exp(math.fsum(self.get_r_log(r_permutations[perm_i], t)))
                 perm_prod[t][perm_i] = np.prod(self.get_r(r_permutations[perm_i], t))
+                # perm_prod[t][perm_i] = np.exp(math.fsum(self.get_r_log(r_permutations[perm_i], t)))
 
             for a in range(self.k):
                 for perm_i in range(len(r_permutations)):
                     if r_permutations[perm_i][a]:
+                        # self.pi[t][a] = self.pi[t][a] + math.fsum(perm_prod[t][perm_i]/r_sum[perm_i])
                         self.pi[t][a] += perm_prod[t][perm_i]/r_sum[perm_i]
                     elif not r_sum[perm_i]:
+                        # self.pi[t][a] = self.pi[t][a] + perm_prod[t][perm_i]/self.k
                         self.pi[t][a] += perm_prod[t][perm_i]/self.k
 
