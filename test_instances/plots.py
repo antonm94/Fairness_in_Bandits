@@ -3,6 +3,9 @@ import thompson_sampling.bern_fair_stochastic_dominance_ts as fair_sd_ts
 import logging
 import warnings
 import numpy as np
+from matplotlib import rc
+
+
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 LOGGING = 1
@@ -145,6 +148,29 @@ def plot_smooth_fairness(test_cases):
     plt.ylabel('number of unfair w.r.t total variation distance')
     plt.legend()
     #bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    plt.show()
+
+
+def plot_delta_subjective_fair(test_cases):
+    x = range(test_cases[0].T)
+    for test in test_cases:
+        # if test.name == 'Thompson Sampling':
+        for e1_ind in range(len(test.e1_arr)):
+            for e2_ind in range(len(test.e2_arr)):
+                    plt.plot(x, np.min(np.min(test.frac_subjective_smooth_fair[e1_ind, e2_ind], axis=1), axis=1),
+                             label=test.get_name(test.e1_arr[e1_ind], test.e2_arr[e2_ind]))
+                    # xmin = np.amin(np.min(np.min(test.frac_subjective_smooth_fair[e1_ind, e2_ind], axis=1), axis=1))
+                    # ymin = np.min(np.min(test.frac_subjective_smooth_fair[e1_ind, e2_ind], axis=1), axis=1)
+                    # plt.plot(xmin, ymin)
+                    # plt.annotate((1 - d), xy=(2, 1), xytext=(3, 1.5),
+                    #              arrowprops=dict(facecolor='black', shrink=0.05),
+                    #              )
+
+    plt.xlabel(r'T \sigma')
+    plt.ylabel('Subjective Smooth fair with probability')
+
+    plt.legend()
+    # bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     plt.show()
 
 

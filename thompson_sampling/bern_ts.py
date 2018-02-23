@@ -22,7 +22,7 @@ class BernThompsonSampling(object):
 
 
     def reset(self):
-        self.pi = np.zeros((self.T, self.k))
+        self.pi = np.full((self.T, self.k), 1./self.k)
         self.r_h = np.full((self.T, self.k), .5)
         self.s = np.full((self.T+1, self.k), .5)
         self.f = np.full((self.T+1, self.k), .5)
@@ -99,13 +99,15 @@ class BernThompsonSampling(object):
         return r_prop
 
 
-    def calc_pi(self):
+    def calc_pi(self, starting_round=0):
+        """""workaround for floating point issues: same probs have to result in same pi"""
+
         # r := binary reward vector
         r_permutations = [np.asarray(seq, dtype=np.int8) for seq in itertools.product("01", repeat=self.k)]
         r_sum = [np.count_nonzero(r_permutations[perm_i]) for perm_i in range(len(r_permutations))]
 
         perm_prod = np.zeros((self.T, len(r_permutations)))
-        for t in range(self.T):
+        for t in range(starting_round, self.T):
             for perm_i in range(len(r_permutations)):
                 #np.set_printoptions(100)
                 # print np.prod(self.get_r(r_permutations[perm_i], t))
@@ -113,12 +115,41 @@ class BernThompsonSampling(object):
                 perm_prod[t][perm_i] = np.prod(self.get_r(r_permutations[perm_i], t))
                 # perm_prod[t][perm_i] = np.exp(math.fsum(self.get_r_log(r_permutations[perm_i], t)))
 
-            for a in range(self.k):
-                for perm_i in range(len(r_permutations)):
-                    if r_permutations[perm_i][a]:
-                        # self.pi[t][a] = self.pi[t][a] + math.fsum(perm_prod[t][perm_i]/r_sum[perm_i])
-                        self.pi[t][a] += perm_prod[t][perm_i]/r_sum[perm_i]
-                    elif not r_sum[perm_i]:
-                        # self.pi[t][a] = self.pi[t][a] + perm_prod[t][perm_i]/self.k
-                        self.pi[t][a] += perm_prod[t][perm_i]/self.k
 
+            arms_with_same_prob = self.get_arms_with_same_prob(t)
+            arms = range(self.k)
+
+            for duplicate in arms_with_same_prob:
+                a = duplicate[0]
+                arms.remove(a)
+                self.pi_from_perm_prob(a, perm_prod, r_permutations, r_sum, t)
+                for i in np.delete(duplicate, 0):
+                    arms.remove(i)
+                    self.pi[t][i] = self.pi[t][a]
+
+            for a in arms:
+                self.pi_from_perm_prob(a, perm_prod, r_permutations, r_sum, t)
+
+    def pi_from_perm_prob(self, a, perm_prod, r_permutations, r_sum, t):
+        for perm_i in range(len(r_permutations)):
+
+            if r_permutations[perm_i][a]:
+                # self.pi[t][a] = self.pi[t][a] + math.fsum(perm_prod[t][perm_i]/r_sum[perm_i])
+                self.pi[t][a] += perm_prod[t][perm_i] / r_sum[perm_i]
+            elif not r_sum[perm_i]:
+                self.pi[t][a] += perm_prod[t][perm_i] / self.k
+
+    def get_arms_with_same_prob(self, t):
+        records_array = self.r_h[t]
+        idx_sort = np.argsort(records_array)
+        sorted_records_array = records_array[idx_sort]
+        vals, idx_start, count = np.unique(sorted_records_array, return_counts=True,
+                                        return_index=True)
+
+        # sets of indices
+        res = np.split(idx_sort, idx_start[1:])
+        # filter them with respect to their size, keeping only items occurring more than once
+
+        vals = vals[count > 1]
+        res = filter(lambda x: x.size > 1, res)
+        return res

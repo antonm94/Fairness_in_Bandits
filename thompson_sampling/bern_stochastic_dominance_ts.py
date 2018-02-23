@@ -8,6 +8,7 @@ class BernStochasticDominance(BernThompsonSampling):
         BernThompsonSampling.__init__(self, bandits, T)
         self.lam = lam
 
+
     def run(self):
         for t in range(self.T):
             self.theta[t] = np.random.beta(self.s[t], self.f[t], self.k)
