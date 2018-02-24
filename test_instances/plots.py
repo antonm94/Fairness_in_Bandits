@@ -151,13 +151,13 @@ def plot_smooth_fairness(test_cases):
     plt.show()
 
 
-def plot_delta_subjective_fair(test_cases):
+def plot_delta_subjective_fair(test_cases, start_index=0):
     x = range(test_cases[0].T)
     for test in test_cases:
         # if test.name == 'Thompson Sampling':
         for e1_ind in range(len(test.e1_arr)):
             for e2_ind in range(len(test.e2_arr)):
-                    plt.plot(x, np.min(np.min(test.frac_subjective_smooth_fair[e1_ind, e2_ind], axis=1), axis=1),
+                    plt.plot(x[start_index:], np.min(np.min(test.frac_subjective_smooth_fair[e1_ind, e2_ind], axis=1), axis=1)[start_index:],
                              label=test.get_name(test.e1_arr[e1_ind], test.e2_arr[e2_ind]))
                     # xmin = np.amin(np.min(np.min(test.frac_subjective_smooth_fair[e1_ind, e2_ind], axis=1), axis=1))
                     # ymin = np.min(np.min(test.frac_subjective_smooth_fair[e1_ind, e2_ind], axis=1), axis=1)
@@ -168,6 +168,29 @@ def plot_delta_subjective_fair(test_cases):
 
     plt.xlabel(r'T \sigma')
     plt.ylabel('Subjective Smooth fair with probability')
+
+    plt.legend()
+    # bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    plt.show()
+
+
+def plot_delta_smooth_fair(test_cases, start_index=0):
+    x = range(test_cases[0].T)
+    for test in test_cases:
+        # if test.name == 'Thompson Sampling':
+        for e1_ind in range(len(test.e1_arr)):
+            for e2_ind in range(len(test.e2_arr)):
+                plt.plot(x[start_index:], np.min(np.min(test.frac_smooth_fair[e1_ind, e2_ind], axis=1), axis=1)[start_index:],
+                         label=test.get_name(test.e1_arr[e1_ind], test.e2_arr[e2_ind]))
+                # xmin = np.amin(np.min(np.min(test.frac_subjective_smooth_fair[e1_ind, e2_ind], axis=1), axis=1))
+                # ymin = np.min(np.min(test.frac_subjective_smooth_fair[e1_ind, e2_ind], axis=1), axis=1)
+                # plt.plot(xmin, ymin)
+                # plt.annotate((1 - d), xy=(2, 1), xytext=(3, 1.5),
+                #              arrowprops=dict(facecolor='black', shrink=0.05),
+                #              )
+
+    plt.xlabel(r'T \sigma')
+    plt.ylabel('Smooth fair with probability')
 
     plt.legend()
     # bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)

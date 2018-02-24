@@ -83,7 +83,8 @@ if __name__ == '__main__':
     N_ITERATIONS = 10.
     DATA_SET = ['Bar Exam', 'Default on Credit'][0]
     bandits = load_data(DATA_SET)
-    T = 100
+    T = 10
+
     e1 = [2]
     e2 = [0.]
     delta = [0.]
@@ -92,10 +93,4 @@ if __name__ == '__main__':
     sd_test = SDTest(N_ITERATIONS, bandits, T, e1, e2, delta, lam=1, distance=total_variation_distance)
     sd_test.analyse(fair_regret=True, regret=True, subjective_smooth_fair=True, smooth_fair=True)
 
-   # plot.plot_delta_subjective_fair([sd_test])
-    print sd_test.subjective_smooth_fair
-    print sd_test.smooth_fair
-    print sd_test.subjective_achievable_delta
-    print sd_test.achievable_delta
-    print sd_test.average_fairness_regret
-    print sd_test.average_regret
+

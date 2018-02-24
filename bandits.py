@@ -4,11 +4,12 @@ import itertools
 
 class Bandits:
 
-    def __init__(self, arms):
+    def __init__(self, arms, data_set_name='no_name'):
         self.arms = arms
         self.k = len(arms)
         self.theta = self.get_mean()
         p_star = self.calc_p_star()
+        self.data_set_name = data_set_name
 
     def get_mean(self):
         t = np.zeros(self.k)

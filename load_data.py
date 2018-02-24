@@ -17,7 +17,7 @@ def bar_exam_data():
     arm[3] = list(race_grouped.get_group('other')['pass_bar'])
     arm[4] = list(race_grouped.get_group('white')['pass_bar'])
 
-    return bandits.Bandits(arm)
+    return bandits.Bandits(arm, 'bar_exam')
 
 
 def default_credit_data():
@@ -28,7 +28,7 @@ def default_credit_data():
     arm[0] = list(sex_default_grouped.get_group(1)['Y'])
     arm[1] = list(sex_default_grouped.get_group(2)['Y'])
 
-    return bandits.Bandits(arm)
+    return bandits.Bandits(arm, 'default_credit')
 
 
 def adult_data():
@@ -67,7 +67,7 @@ def load_data(s,  p=None):
         for i in range(len(p)):
             arm[i] = np.random.binomial(1, p[i], 1000)
 
-        return bandits.Bandits(arm)
+        return bandits.Bandits(arm, 'random')
     else:
         print 'unknown data set'
 

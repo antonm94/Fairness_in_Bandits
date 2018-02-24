@@ -7,5 +7,5 @@ class SDTest(TSTest):
     def __init__(self, n_iter, bandits, T, e1_arr, e2_arr, delta_arr, lam=1, distance=total_variation_distance):
         TSTest.__init__(self, n_iter, bandits, T, e1_arr, e2_arr, delta_arr, distance)
         self.curr_test = sd_ts.BernStochasticDominance(self.bandits, self.T, lam)
-        self.name = 'Stochastic Dominance Thompson Sampling'
+        self.name = 'SD TS'
         self.lam = lam
