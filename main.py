@@ -94,3 +94,4 @@ if __name__ == '__main__':
     sd_test.analyse(fair_regret=True, regret=True, subjective_smooth_fair=True, smooth_fair=True)
 
 
+    print sd_test.achievable_delta

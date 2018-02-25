@@ -53,7 +53,7 @@ class TSTest:
                 for j in range(self.k):
                     self.smooth_fair[e1_ind, e2_ind, t, i, j] += smooth_fairness(
                         self.e1_arr[e1_ind], e2_times*self.e2_arr[e2_ind], i, j, self.curr_test.pi[t],
-                        self.curr_test.bandits.theta, self.distance)
+                        self.r_theta, self.distance)
 
 
 
@@ -106,15 +106,22 @@ class TSTest:
         return np.apply_along_axis(lambda x: np.sum(x * distance_to_max), 1, self.average_n)
 
     def analyse(self, regret=True, fair_regret=True, smooth_fair = True, subjective_smooth_fair = False):
-        pi = np.zeros((int(self.n_iter), self.curr_test.T, self.curr_test.k))
-        r_h = np.zeros((int(self.n_iter), self.curr_test.T, self.curr_test.k))
+        file_name = self.bandits.data_set_name + '/' + self.name + '/N_ITER_{}'.format(
+            int(self.n_iter)) + '_T_{}'.format(self.T)
+        if os.path.exists(file_name):
+            self.analyse_from_file(regret, fair_regret, smooth_fair, subjective_smooth_fair)
+            print 'restored data from file'
+            return
+
+        pi = np.zeros((int(self.n_iter), self.T, self.k))
+        r_h = np.zeros((int(self.n_iter), self.T, self.k))
         n = np.zeros((int(self.n_iter), self.T, self.k))
         for it in range(int(self.n_iter)):
 
             self.curr_test.run()
             pi[it] = self.curr_test.pi
             r_h[it] = self.curr_test.r_h
-
+            n[it] = self.curr_test.n
 
 
             if fair_regret:
@@ -151,7 +158,6 @@ class TSTest:
         if fair_regret:
             self.average_fairness_regret = np.divide(self.average_fairness_regret, self.n_iter)
 
-        file_name = self.bandits.data_set_name + '/' + self.name + '/N_ITER_{}'.format(int(self.n_iter)) + '_T_{}'.format(self.T)
         if not os.path.exists(file_name):
             os.makedirs(file_name)
         np.savez(file_name, pi=pi, r_h=r_h, r_theta=self.bandits.theta, n=n)
@@ -161,16 +167,12 @@ class TSTest:
         file_name = self.bandits.data_set_name + '/' + self.name + '/N_ITER_{}'.format(int(self.n_iter)) + '_T_{}'.format(self.T)
         if not os.path.exists(file_name):
             print 'no such file'
-        pi = np.zeros((int(self.n_iter), self.curr_test.T, self.curr_test.k))
-        r_h = np.zeros((int(self.n_iter), self.curr_test.T, self.curr_test.k))
-        n = np.zeros((int(self.n_iter), self.T, self.k))
+        npzfile = np.load(file_name+'.npz')
+
         for it in range(int(self.n_iter)):
-
-            self.curr_test.run()
-            pi[it] = self.curr_test.pi
-            r_h[it] = self.curr_test.r_h
-
-
+            self.curr_test.pi = npzfile['pi'][it]
+            self.curr_test.r_h = npzfile['r_h'][it]
+            self.curr_test.n = npzfile['n'][it]
 
             if fair_regret:
                 self.average_fairness_regret = self.average_fairness_regret + self.calc_fairness_regret()
@@ -185,8 +187,6 @@ class TSTest:
                 for i in range(len(self.e1_arr)):
                     for j in range(len(self.e2_arr)):
                         self.calc_subjective_smooth_fairness(i, j)
-
-            self.curr_test.reset()
 
         if smooth_fair:
             for i in range(len(self.e1_arr)):
@@ -206,9 +206,6 @@ class TSTest:
         if fair_regret:
             self.average_fairness_regret = np.divide(self.average_fairness_regret, self.n_iter)
 
-        file_name = self.bandits.data_set_name + '/' + self.name + '/N_ITER_{}'.format(int(self.n_iter)) + '_T_{}'.format(self.T)
-        if not os.path.exists(file_name):
-            os.makedirs(file_name)
-        np.savez(file_name, pi=pi, r_h=r_h, n=n)
+
 
 
