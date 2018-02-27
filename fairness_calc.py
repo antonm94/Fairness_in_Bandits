@@ -37,5 +37,12 @@ def smooth_fairness(e1, e2, i, j, pi, r, distance=total_variation_distance):
     #     + ' and pi: {}'.format(pi[i]) + 'Arm j: {}'.format(j) + ' with r: {}'.format(r[j]) + 'and pi: {}'.format(pi[j])
     #     + 'distance: {}'.format(d_pi - (e1 * d_r + e2))
     #     logging.info(s)
+
     return 0
 
+def get_e1_smooth_fairness(e2, i, j, pi, r, distance=total_variation_distance):
+    d_pi = distance([pi[i], 1 - pi[i]], [pi[j], 1 - pi[j]])  # 2*distance missing *0.5 in calc
+    d_r = distance([r[i], 1 - r[i]], [r[j], 1 - r[j]])
+    if d_r == 0.:
+        return 0.
+    return (d_pi - 0.5*e2) / d_r

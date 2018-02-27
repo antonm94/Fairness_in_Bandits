@@ -2,8 +2,9 @@ import thompson_sampling.bern_fair_stochastic_dominance_ts as fair_sd_ts
 from ts_test import TSTest
 import numpy as np
 from distance import total_variation_distance
-from fairness_calc import smooth_fairness
-
+import fairness_calc
+import os
+import math
 
 class FairSDTest(TSTest):
     def __init__(self, n_iter, bandits, T, e1_arr, e2_arr, delta_arr, lam=1, distance=total_variation_distance):
@@ -12,7 +13,6 @@ class FairSDTest(TSTest):
         for i in range(len(e2_arr)):
             for d in range(len(delta_arr)):
                 self.test_cases[i][d] = fair_sd_ts.BernFairStochasticDominance(bandits, T, e2_arr[i], delta_arr[d], lam, distance)
-        self.curr_test = self.test_cases[0][0]
         self.average_fairness_regret = np.zeros((len(e2_arr), len(delta_arr), T))
         self.average_n = np.zeros((len(e2_arr), len(delta_arr), self.T, self.k))
         self.average_rounds_exploring = np.zeros((len(e2_arr), len(delta_arr)))
@@ -20,6 +20,8 @@ class FairSDTest(TSTest):
         self.lam = lam
         self.name = 'Fair SD TS'
         self.smooth_fair = np.zeros((len(e1_arr), len(e2_arr), len(delta_arr), self.T, self.k, self.k))
+        self.average_fairness_regret = np.zeros((len(e2_arr), len(delta_arr), T))
+        self.average_regret = np.zeros((len(e2_arr), len(delta_arr), T))
 
     def get_rounds(self):
         return self.average_rounds_exploring, self.average_rounds_exploiting
@@ -33,57 +35,119 @@ class FairSDTest(TSTest):
                 regret[j][d] = np.apply_along_axis(lambda x: sum(x * distance_to_max), 1, self.average_n[j][d])
         return regret
 
-    def calc_smooth_fairness(self, e1_ind, e2_ind, d, e2_times=1):
+    def calc_frac_smooth_fair(self, e1_ind, e2_ind):
+        for t in range(1, self.T):
+            self.frac_smooth_fair[e1_ind, e2_ind, t] = np.divide(self.smooth_fair[e1_ind, e2_ind, t], self.n_iter)
+            self.achievable_delta[e1_ind, e2_ind, t] = max(1 - np.ndarray.min(self.frac_smooth_fair[e1_ind, e2_ind, t]),
+                                                           self.achievable_delta[e1_ind, e2_ind, t - 1])
 
-        for t in range(self.T):
-            for i in range(self.k):
-                # for j in range(i + 1, self.k):
-                for j in range(self.k):
-                    # self.r_theta = np.full(k, 0.5)+k[t] n[t]
+    def calc_is_smooth_fair(self, e1_ind, e2_ind):
+        for t in range(1, self.T):
+            for delta_ind in range(len(self.delta_arr)):
+                b = (self.frac_smooth_fair[e1_ind, e2_ind, t] >= 1 - self.delta_arr[delta_ind])
+                self.is_smooth_fair[e1_ind, e2_ind, delta_ind, t] = np.all(b) and \
+                                                                    self.is_smooth_fair[
+                                                                        e1_ind, e2_ind, delta_ind, t - 1]
 
-                    self.smooth_fair[e1_ind][e2_ind][d][t][i][j] += smooth_fairness(self.e1_arr[e1_ind],
-                                                                                 e2_times * self.e2_arr[e2_ind]
-                                                                                 , i, j, self.curr_test.theta[t],
-                                                                                 self.r_theta, self.distance)
+    def calc_frac_subjective_smooth_fair(self, e1_ind, e2_ind):
+        for t in range(1, self.T):
+            self.frac_subjective_smooth_fair[e1_ind, e2_ind, t] = np.divide(
+                self.subjective_smooth_fair[e1_ind, e2_ind, t], self.n_iter)
+            self.subjective_achievable_delta[e1_ind, e2_ind, t] = max(
+                1 - np.ndarray.min(self.frac_subjective_smooth_fair[e1_ind, e2_ind, t]),
+                self.subjective_achievable_delta[e1_ind, e2_ind, t - 1])
 
-    def frac_smooth_fair(self):
-        for e1_ind in range(len(self.e1_arr)):
-            for e2_ind in range(len(self.e2_arr)):
-                for delta_ind in range(len(self.delta_arr)):
-                   # print (np.divide(self.smooth_fair[e1_ind][e2_ind], self.n_iter) >= 1 - self.delta_arr[delta_ind])
-                    self.is_smooth_fair[e1_ind][e2_ind][delta_ind] = np.all(np.divide(self.smooth_fair[e1_ind][e2_ind]
-                                                                                      [delta_ind], self.n_iter) >= 1 -
-                                                                            self.delta_arr[delta_ind])
+    def calc_is_subjective_smooth_fair(self, e1_ind, e2_ind):
+        for t in range(1, self.T):
+            for delta_ind in range(len(self.delta_arr)):
+                b = (self.frac_subjective_smooth_fair[e1_ind, e2_ind, t] >= 1 - self.delta_arr[delta_ind])
+                self.is_subjective_smooth_fair[e1_ind, e2_ind, delta_ind, t] = np.all(b) and \
+                                                                               self.is_subjective_smooth_fair[
+                                                                                   e1_ind, e2_ind, delta_ind, t - 1]
 
-    def analyse(self, regret=True, fair_regret=True, smooth_fair = True, e2_times=1):
 
-        for it in range(int(self.n_iter)):
-            for j in range(len(self.e2_arr)):
-                for d in range(len(self.delta_arr)):
-                    self.curr_test = self.test_cases[j][d]
-                    self.curr_test.run()
-                    self.average_rounds_exploiting[j][d] += self.curr_test.rounds_exploiting
-                    self.average_rounds_exploring[j][d] += self.curr_test.rounds_exploring
-                    if regret:
-                        self.calc_fairness_regret()
-                    if fair_regret:
-                        self.average_fairness_regret[j][d] += self.calc_fairness_regret()
-                    self.average_n[j][d] += self.curr_test.n
-                    if smooth_fair:
-                        for i in range(len(self.e1_arr)):
-                           self.calc_smooth_fairness(i, j, d, e2_times)
+
+
+    def analyse(self, regret=True, fair_regret=True, smooth_fair = True, e2_times=1, minimum_e1=True):
+
+        # cwd = os.getcwd()
+        # last_dir = cwd.split('/')[-1]
+        # if last_dir == 'notebooks':
+        #     os.chdir(cwd.replace('/notebooks', ''))
+        #
+        # if os.path.exists(file_name):
+        #     self.analyse_from_file(regret, fair_regret, smooth_fair, subjective_smooth_fair)
+        #     print 'restored data from file'
+        #     return
+
+        # pi = np.zeros((int(self.n_iter), len(self.e2_arr), len(self.delta_arr), self.T, self.k))
+        # r_h = np.zeros((int(self.n_iter), len(self.e2_arr), len(self.delta_arr), self.T, self.k))
+        # n = np.zeros((int(self.n_iter), len(self.e2_arr), len(self.delta_arr), self.T, self.k))
+
+        if minimum_e1:
+            min_e1 = np.zeros((len(self.e2_arr), self.T, int(self.n_iter)))
+        for e2_ind, e2 in enumerate(self.e2_arr):
+            for d_ind, d in enumerate(self.delta_arr):
+
+                curr_test = self.test_cases[e2_ind, d_ind]
+                for it in range(int(self.n_iter)):
+                    print self.test_cases.shape
+                    curr_test.run()
+                    # pi[it][j][d] = self.curr_test.pi
+                    # r_h[it][j][d] = self.curr_test.r_h
+                    # n[it][j][d] = self.curr_test.n
+                    #
+                    # file_name = self.bandits.data_set_name + '/' + self.name + '/N_ITER_{}'.format(
+                    #     int(self.n_iter)) + '_T_{}'.format(self.T)+'_e2_{}'.format(self.e2_arr[j])\
+                    #             +'_delta_{}'.format(self.delta_arr[d])
+
+
+
+                    # self.average_rounds_exploiting[j][d] += self.curr_test.rounds_exploiting
+                    # self.average_rounds_exploring[j][d] += self.curr_test.rounds_exploring
+                    # if regret:
+                    #     self.calc_fairness_regret()
+                    # if fair_regret:
+                    #     self.average_fairness_regret[j][d] += self.calc_fairness_regret()
+                    # self.average_n[j][d] += curr_test.n
+                    # if smooth_fair:
+                    #     for i in range(len(self.e1_arr)):
+                    #        self.calc_smooth_fairness(i, j, d, e2_times)
+
+                    if minimum_e1:
+                        for t in range(self.T):
+                            e1 = 0
+                            for i in range(self.k):
+                                for j in range(self.k):
+                                    curr_e1 = fairness_calc.get_e1_smooth_fairness(e2, i, j, self.curr_test.pi[t],
+                                                                                   self.curr_test.r_h[t],
+                                                                                   self.distance)
+                                    # self.r_theta, self.distance)
+                                    e1 = max(e1, curr_e1)
+                            min_e1[e2_ind, t, it] = e1
+
+                            self.min_e1[d_ind, e2_ind, t] \
+                                = min_e1[
+                                e2_ind, t, min(int(math.ceil((1 - d) * self.n_iter)), int(self.n_iter - 1))]
 
                     self.curr_test.reset()
+        if minimum_e1:
+            # print min_e1
+            min_e1.sort(axis=-1)
+            #   print min_e1
 
         self.average_n = np.divide(self.average_n, self.n_iter)
-        if fair_regret:
-                self.average_regret = self.get_regret()
-        if fair_regret:
-            self.average_fairness_regret = np.divide(self.average_fairness_regret, self.n_iter)
+        # if fair_regret:
+        #         self.average_regret = self.get_regret()
+        # if fair_regret:
+        #     self.average_fairness_regret = np.divide(self.average_fairness_regret, self.n_iter)
         # if smooth_fair:
         #     self.average_smooth_fair = np.divide(self.average_smooth_fair, self.n_iter)
         #     self.average_not_smooth_fair = np.divide(self.average_not_smooth_fair, self.n_iter)
         self.average_rounds_exploring = np.divide(self.average_rounds_exploring, self.n_iter)
         self.average_rounds_exploiting = np.divide(self.average_rounds_exploiting, self.n_iter)
 
+        # if not os.path.exists(file_name):
+        #     os.makedirs(file_name)
+        # np.savez(file_name, pi=pi, r_h=r_h, r_theta=self.bandits.theta, n=n)
 

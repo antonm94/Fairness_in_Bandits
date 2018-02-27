@@ -16,7 +16,7 @@ class BernThompsonSampling(object):
         self.f = np.full((self.T+1, self.k), self.prior_b)
         self.theta = np.zeros((self.T, self.k))
         self.n = np.zeros((self.T, self.k))
-        self.pi = np.zeros((self.T, self.k))
+        self.pi = np.full((self.T, self.k), 1./self.k)
         self.r_h = np.full((self.T, self.k), .5)
 
 

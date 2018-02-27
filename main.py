@@ -10,9 +10,8 @@ from test_instances.fair_sd_ts_test import FairSDTest
 from test_instances.sd_ts_test import SDTest
 import numpy as np
 import test_instances.plots as plot
+import test_instances.final_plot as f_plot
 
-TEST = 0
-N_ITERATIONS = 10.
 DATA_SET = ['Bar Exam', 'Default on Credit'][0]
 METHODS = TEST_THOMPSON*['Thompson Sampling'] + TEST_SD_TS*['Stochastic Dominance Thompson Sampling'] + \
           TEST_FAIR_SD_TS*['Fair Stochastic Dominance Thompson Sampling']
@@ -83,15 +82,25 @@ if __name__ == '__main__':
     N_ITERATIONS = 10.
     DATA_SET = ['Bar Exam', 'Default on Credit'][0]
     bandits = load_data(DATA_SET)
-    T = 10
+    T = 10000
 
-    e1 = [2]
-    e2 = [0.]
-    delta = [0.]
+    e1 = [2, 1]
+    e2 = [0.1, 0.2]
+    delta = [0.2]
     random.seed(0)
     np.random.seed(0)
-    sd_test = SDTest(N_ITERATIONS, bandits, T, e1, e2, delta, lam=1, distance=total_variation_distance)
-    sd_test.analyse(fair_regret=True, regret=True, subjective_smooth_fair=True, smooth_fair=True)
+    sd_test0 = SDTest(N_ITERATIONS, bandits, T, e1, e2, delta, lam=1, distance=total_variation_distance)
+    sd_test0.analyse(fair_regret=True, regret=True, subjective_smooth_fair=True, smooth_fair=True)
+    fair_sd_test = FairSDTest(N_ITERATIONS, bandits, T, e1, e2, delta, lam=1, distance=total_variation_distance)
+    fair_sd_test.analyse()
 
-
-    print sd_test.achievable_delta
+    # DATA_SET = ['Bar Exam', 'Default on Credit'][1]
+    # bandits = load_data(DATA_SET)
+    # sd_test1 = SDTest(N_ITERATIONS, bandits, T, e1, e2, delta, lam=1, distance=total_variation_distance)
+    # sd_test1.analyse(fair_regret=True, regret=True, subjective_smooth_fair=True, smooth_fair=True)
+    # test_cases = [sd_test0, sd_test1]
+    test_cases = [sd_test0]
+    test_cases = [fair_sd_test]
+    # plot.plot_delta_subjective_fair(test_cases)
+    # plot.plot_delta_smooth_fair(test_cases)
+    f_plot.plot_min_e1(test_cases)

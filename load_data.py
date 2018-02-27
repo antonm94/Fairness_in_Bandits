@@ -21,7 +21,7 @@ def bar_exam_data():
 
 
 def default_credit_data():
-    df = pd.read_excel(path +'./DataSets/Default/default.xls')
+    df = pd.read_excel(path +'/DataSets/Default/default.xls')
     sex_default = df[['X2','Y']][1:]
     sex_default_grouped = sex_default.groupby('X2')
     arm = np.empty((2,), dtype=object)
