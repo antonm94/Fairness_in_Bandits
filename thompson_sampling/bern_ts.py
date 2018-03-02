@@ -16,13 +16,13 @@ class BernThompsonSampling(object):
         self.f = np.full((self.T+1, self.k), self.prior_b)
         self.theta = np.zeros((self.T, self.k))
         self.n = np.zeros((self.T, self.k))
-        self.pi = np.full((self.T, self.k), 1./self.k)
+        self.pi = np.zeros((self.T, self.k))
         self.r_h = np.full((self.T, self.k), .5)
 
 
 
     def reset(self):
-        self.pi = np.full((self.T, self.k), 1./self.k)
+        self.pi = np.zeros((self.T, self.k))
         self.r_h = np.full((self.T, self.k), .5)
         self.s = np.full((self.T+1, self.k), .5)
         self.f = np.full((self.T+1, self.k), .5)
@@ -107,6 +107,7 @@ class BernThompsonSampling(object):
         r_sum = [np.count_nonzero(r_permutations[perm_i]) for perm_i in range(len(r_permutations))]
 
         perm_prod = np.zeros((self.T, len(r_permutations)))
+        self.pi[:starting_round] = 1./self.k
         for t in range(starting_round, self.T):
             for perm_i in range(len(r_permutations)):
                 #np.set_printoptions(100)
@@ -129,6 +130,8 @@ class BernThompsonSampling(object):
 
             for a in arms:
                 self.pi_from_perm_prob(a, perm_prod, r_permutations, r_sum, t)
+
+        # print self.pi
 
     def pi_from_perm_prob(self, a, perm_prod, r_permutations, r_sum, t):
         for perm_i in range(len(r_permutations)):

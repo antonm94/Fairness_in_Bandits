@@ -1,7 +1,7 @@
 import numpy as np
 import random
 import itertools
-
+import thompson_sampling.calc_c
 class Bandits:
 
     def __init__(self, arms, data_set_name='no_name'):

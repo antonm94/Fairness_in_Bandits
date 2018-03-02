@@ -6,13 +6,17 @@ import matplotlib.patches as mpatches
 def plot_min_e1(tests):
     fig, ax = plt.subplots()
     x = range(tests[0].T)
-    sns.set_palette("husl")
+    sns.set_palette("cubehelix", 10)
     colors = sns.color_palette()
     linestyles = ['-', '--', '-.', ':']
     algo_labels = []
     data_labels = []
     got_labels = False
     for test_ind, test in enumerate(tests):
+        if test.name == 'Fair SD TS':
+            print test.average_rounds_exploring
+
+
         color_ind = 0
         for e2_ind, e2 in enumerate(test.e2_arr):
             for delta_ind, delta in enumerate(test.delta_arr):

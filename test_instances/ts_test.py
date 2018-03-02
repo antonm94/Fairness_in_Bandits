@@ -37,7 +37,7 @@ class TSTest:
         self.average_n = np.zeros((self.T, self.k))
         self.name = 'TS'
         self.lam = 0
-        self.min_e1 = np.zeros((len(delta_arr), len(e2_arr), self.T))
+        self.min_e1 = np.zeros((len(e2_arr), len(delta_arr), self.T))
 
     def get_name(self, e1=-1, e2=-1, delta=-1):
         s = self.name
@@ -80,8 +80,8 @@ class TSTest:
         for t in range(1, self.T):
             for delta_ind in range(len(self.delta_arr)):
                 b = (self.frac_smooth_fair[e1_ind, e2_ind, t] >= 1 - self.delta_arr[delta_ind])
-                self.is_smooth_fair[e1_ind, e2_ind, delta_ind, t] = np.all(b) and \
-                                                                self.is_smooth_fair[e1_ind, e2_ind, delta_ind, t-1]
+                self.is_smooth_fair[e1_ind, e2_ind, delta_ind, t] = \
+                    np.all(b) and self.is_smooth_fair[e1_ind, e2_ind, delta_ind, t-1]
 
     def calc_frac_subjective_smooth_fair(self, e1_ind, e2_ind):
         for t in range(1, self.T):
@@ -137,7 +137,7 @@ class TSTest:
 
 
             if fair_regret:
-                self.average_fairness_regret = self.average_fairness_regret + self.calc_fairness_regret()
+                self.average_fairness_regret += self.calc_fairness_regret()
             self.average_n = self.average_n + self.curr_test.n
 
             if smooth_fair:
@@ -156,23 +156,21 @@ class TSTest:
                         for i in range(self.k):
                             for j in range(self.k):
                                 curr_e1 = fairness_calc.get_e1_smooth_fairness(e2, i, j, self.curr_test.pi[t],
-                                                                                 self.curr_test.r_h[t],  self.distance)
+                                                                                 self.r_theta,  self.distance)
                                                                                 # self.r_theta, self.distance)
                                 e1 = max(e1, curr_e1)
                         min_e1[e2_ind, t, it] = e1
 
 
             self.curr_test.reset()
-            if minimum_e1:
-               # print min_e1
-                min_e1.sort(axis=-1)
-             #   print min_e1
 
-                for delta_ind, delta in enumerate(self.delta_arr):
-                    for e2_ind, e2 in enumerate(self.e2_arr):
-                        for t in range(self.T):
-                            self.min_e1[delta_ind, e2_ind, t] \
-                                = min_e1[e2_ind, t, min(int(math.ceil((1-delta)*self.n_iter)), int(self.n_iter-1))]
+        if minimum_e1:
+            min_e1.sort(axis=-1)
+            for delta_ind, delta in enumerate(self.delta_arr):
+                for e2_ind, e2 in enumerate(self.e2_arr):
+                    for t in range(self.T):
+                        self.min_e1[delta_ind, e2_ind, t] \
+                            = min_e1[e2_ind, t, min(int(math.ceil((1-delta)*self.n_iter)), int(self.n_iter-1))]
 
 
 

@@ -186,13 +186,25 @@ def plot_delta_subjective_fair(test_cases, start_index=0):
 
 
 def plot_delta_smooth_fair(test_cases, start_index=0):
-    x = range(test_cases[0].T)
+    T = test_cases[0].T
+    x = range(T)
     for test in test_cases:
         # if test.name == 'Thompson Sampling':
         for e1_ind in range(len(test.e1_arr)):
             for e2_ind in range(len(test.e2_arr)):
-                plt.plot(x[start_index:], np.min(np.min(test.frac_smooth_fair[e1_ind, e2_ind], axis=1), axis=1)[start_index:],
-                         label=test.get_name(test.e1_arr[e1_ind], test.e2_arr[e2_ind]))
+                if test.name == 'Fair SD TS':
+                    for d in range(len(test.delta_arr)):
+                        plt.plot(x[start_index:],
+                                 np.min(np.min(test.frac_smooth_fair[e1_ind, e2_ind, d], axis=1), axis=1)
+                                 [start_index:],
+                                 label=test.get_name(test.e1_arr[e1_ind], test.e2_arr[e2_ind], test.delta_arr[d]))
+                else:
+                    plt.plot(x[start_index:],
+                                 np.min(np.min(test.frac_smooth_fair[e1_ind, e2_ind], axis=1),  axis=1)
+                                 [start_index:],
+                                     label=test.get_name(test.e1_arr[e1_ind], test.e2_arr[e2_ind]))
+
+
                 # xmin = np.amin(np.min(np.min(test.frac_subjective_smooth_fair[e1_ind, e2_ind], axis=1), axis=1))
                 # ymin = np.min(np.min(test.frac_subjective_smooth_fair[e1_ind, e2_ind], axis=1), axis=1)
                 # plt.plot(xmin, ymin)
@@ -202,6 +214,8 @@ def plot_delta_smooth_fair(test_cases, start_index=0):
 
     plt.xlabel(r'T \sigma')
     plt.ylabel('Smooth fair with probability')
+    plt_name = 'delta_smooth_fair_{}'.format(T)+'.png'
+    plt.savefig('delta_smooth_fair.png', bbox_inches='tight')
 
     plt.legend()
     # bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
