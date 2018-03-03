@@ -18,8 +18,7 @@ class BernThompsonSampling(object):
         self.n = np.zeros((self.T, self.k))
         self.pi = np.zeros((self.T, self.k))
         self.r_h = np.full((self.T, self.k), .5)
-
-
+        self.not_ts = np.zeros(self.T)
 
     def reset(self):
         self.pi = np.zeros((self.T, self.k))
@@ -108,28 +107,39 @@ class BernThompsonSampling(object):
 
         perm_prod = np.zeros((self.T, len(r_permutations)))
         self.pi[:starting_round] = 1./self.k
+
         for t in range(starting_round, self.T):
-            for perm_i in range(len(r_permutations)):
-                #np.set_printoptions(100)
-                # print np.prod(self.get_r(r_permutations[perm_i], t))
-                # print np.exp(math.fsum(self.get_r_log(r_permutations[perm_i], t)))
-                perm_prod[t][perm_i] = np.prod(self.get_r(r_permutations[perm_i], t))
-                # perm_prod[t][perm_i] = np.exp(math.fsum(self.get_r_log(r_permutations[perm_i], t)))
+            if self.not_ts[t]:
+                for perm_i in range(len(r_permutations)):
+                    #np.set_printoptions(100)
+                    # print np.prod(self.get_r(r_permutations[perm_i], t))
+                    # print np.exp(math.fsum(self.get_r_log(r_permutations[perm_i], t)))
+                    perm_prod[t][perm_i] = np.prod(self.get_r(r_permutations[perm_i], t))
+                    # perm_prod[t][perm_i] = np.exp(math.fsum(self.get_r_log(r_permutations[perm_i], t)))
 
 
-            arms_with_same_prob = self.get_arms_with_same_prob(t)
-            arms = range(self.k)
+                arms_with_same_prob = self.get_arms_with_same_prob(t)
+                arms = range(self.k)
 
-            for duplicate in arms_with_same_prob:
-                a = duplicate[0]
-                arms.remove(a)
-                self.pi_from_perm_prob(a, perm_prod, r_permutations, r_sum, t)
-                for i in np.delete(duplicate, 0):
-                    arms.remove(i)
-                    self.pi[t][i] = self.pi[t][a]
+                for duplicate in arms_with_same_prob:
+                    a = duplicate[0]
+                    arms.remove(a)
+                    self.pi_from_perm_prob(a, perm_prod, r_permutations, r_sum, t)
+                    for i in np.delete(duplicate, 0):
+                        arms.remove(i)
+                        self.pi[t][i] = self.pi[t][a]
 
-            for a in arms:
-                self.pi_from_perm_prob(a, perm_prod, r_permutations, r_sum, t)
+                for a in arms:
+                    self.pi_from_perm_prob(a, perm_prod, r_permutations, r_sum, t)
+            else:
+                n_iter = 1000
+                for i in range(n_iter):
+                    a = np.zeros(self.k)
+                    theta = np.random.beta(self.s[t], self.f[t], (n_iter, self.k))
+                    max_theta =
+                    max_theta = np.where(self.theta == self.theta.max())[0]
+                    ++a[np.random.choice(max_theta)]
+                np.divide(a, n_iter)
 
         # print self.pi
 

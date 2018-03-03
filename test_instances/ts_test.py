@@ -61,7 +61,6 @@ class TSTest:
 
 
 
-
     def calc_subjective_smooth_fairness(self, e1_ind, e2_ind, e2_times=1):
         for t in range(self.T):
             for i in range(self.k):
@@ -161,18 +160,16 @@ class TSTest:
                                 e1 = max(e1, curr_e1)
                         min_e1[e2_ind, t, it] = e1
 
-
             self.curr_test.reset()
+
 
         if minimum_e1:
             min_e1.sort(axis=-1)
             for delta_ind, delta in enumerate(self.delta_arr):
                 for e2_ind, e2 in enumerate(self.e2_arr):
                     for t in range(self.T):
-                        self.min_e1[delta_ind, e2_ind, t] \
+                        self.min_e1[e2_ind, delta_ind, t] \
                             = min_e1[e2_ind, t, min(int(math.ceil((1-delta)*self.n_iter)), int(self.n_iter-1))]
-
-
 
 
         if smooth_fair:
@@ -196,7 +193,8 @@ class TSTest:
         # if not os.path.exists(file_name):
         #     os.makedirs(file_name)
         # np.savez(file_name, pi=pi, r_h=r_h, r_theta=self.bandits.theta, n=n)
-
+        # print self.frac_smooth_fair[-1, -1]
+        # print np.min(self.frac_smooth_fair[-1, -1], axis=1)
 
     def analyse_from_file(self, regret=True, fair_regret=True, smooth_fair = True, subjective_smooth_fair = False):
         file_name = self.bandits.data_set_name + '/' + self.name + '/N_ITER_{}'.format(int(self.n_iter)) + '_T_{}'.format(self.T)

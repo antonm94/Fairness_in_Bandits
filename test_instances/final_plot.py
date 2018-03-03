@@ -20,15 +20,15 @@ def plot_min_e1(tests):
         color_ind = 0
         for e2_ind, e2 in enumerate(test.e2_arr):
             for delta_ind, delta in enumerate(test.delta_arr):
-                ax.plot(x, test.min_e1[delta_ind, e2_ind], linestyle=linestyles[test_ind],
-                        color=colors[color_ind])
-                if not got_labels:
-                    algo_labels.append(mpatches.Patch(color=colors[color_ind], label=test.get_name(delta=delta, e2=e2)))
+                ax.plot(x, test.min_e1[e2_ind, delta_ind], linestyle=linestyles[test_ind],
+                        color=colors[color_ind], label=test.get_name(delta=delta, e2=e2))
+                # algo_labels.append(mpatches.Patch(color=colors[color_ind], label=test.get_name(delta=delta, e2=e2)))
                 color_ind = color_ind + 1
         got_labels = True
     plt.xlabel('T')
     plt.ylabel('minimum e1')
-    plt.legend(handles=algo_labels, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-    plt.savefig('foo.png', bbox_inches='tight')
+    # plt.legend(handles=algo_labels, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    plt.legend()
+    plt.savefig('min_e1.png', bbox_inches='tight')
 
     plt.show()

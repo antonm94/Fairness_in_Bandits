@@ -56,7 +56,8 @@ class FairSDTest(TSTest):
                     # self.r_theta = np.full(k, 0.5)+k[t] n[t]
                     self.smooth_fair[e1_ind, e2_ind, d_ind, t, i, j] += \
                         fairness_calc.smooth_fairness(self.e1_arr[e1_ind], e2_times * self.e2_arr[e2_ind], i, j,
-                                                      self.curr_test.theta[t], self.r_theta, self.distance)
+                                                      self.curr_test.pi[t], self.r_theta, self.distance)
+
 
     def calc_frac_smooth_fair(self, e1_ind, e2_ind, delta_ind):
         for t in range(1, self.T):
@@ -120,8 +121,7 @@ class FairSDTest(TSTest):
                     if smooth_fair:
                         for e1_ind in range(len(self.e1_arr)):
                             self.calc_smooth_fairness(e1_ind, e2_ind, d_ind, e2_times)
-                            self.calc_frac_smooth_fair(e1_ind, e2_ind, d_ind)
-
+                    #print self.smooth_fair
                     if minimum_e1:
                         for t in range(self.T):
                             e1 = 0
@@ -137,13 +137,17 @@ class FairSDTest(TSTest):
 
                     self.curr_test.reset()
 
+
                 if minimum_e1:
                     min_e1.sort(axis=-1)
                     self.min_e1[e2_ind, d_ind, t] \
                         = min_e1[
                         e2_ind, d_ind, t, min(int(math.ceil((1 - d) * self.n_iter)), int(self.n_iter - 1))]
+                if smooth_fair:
+                    for e1_ind in range(len(self.e1_arr)):
 
-
+                        self.calc_frac_smooth_fair(e1_ind, e2_ind, d_ind)
+                        # self.calc_is_smooth_fair(i, j)
 
         self.average_n = np.divide(self.average_n, self.n_iter)
         # if fair_regret:
@@ -155,7 +159,7 @@ class FairSDTest(TSTest):
         #     self.average_not_smooth_fair = np.divide(self.average_not_smooth_fair, self.n_iter)
         self.average_rounds_exploring = np.divide(self.average_rounds_exploring, self.n_iter)
         self.average_rounds_exploiting = np.divide(self.average_rounds_exploiting, self.n_iter)
-
+        print self.average_rounds_exploring
         # if not os.path.exists(file_name):
         #     os.makedirs(file_name)
         # np.savez(file_name, pi=pi, r_h=r_h, r_theta=self.bandits.theta, n=n)

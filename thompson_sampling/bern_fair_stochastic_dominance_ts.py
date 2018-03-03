@@ -20,7 +20,7 @@ class BernFairStochasticDominance(BernStochasticDominance, BernThompsonSampling)
         self.e2 = e2
         self.delta = delta
         self.c = c
-        print self.c
+
 
     def reset(self):
         BernStochasticDominance.reset(self)
@@ -32,7 +32,7 @@ class BernFairStochasticDominance(BernStochasticDominance, BernThompsonSampling)
         exploiting = False
         for t in range(self.T):
 
-            if np.random.binomial(1, [self.lam])[0]:
+            if self.not_ts[t]:
                 # empty dict evaluate to false
                 if exploiting:
                     # exploition
@@ -63,8 +63,7 @@ class BernFairStochasticDominance(BernStochasticDominance, BernThompsonSampling)
             if o[a] == 1 and (self.n[t, a] > c_alg2(self.e2, self.delta, self.bandits.get_mean(), a, self.k)):
                 o[a] = 0
                 if np.sum(o) == 0:
-                    # print self.n[:t]
+                   # print self.n[:t]
                     exploiting = True
-        print self.n
         self.calc_r_h()
         self.calc_pi(self.rounds_exploring)

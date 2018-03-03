@@ -194,10 +194,12 @@ def plot_delta_smooth_fair(test_cases, start_index=0):
             for e2_ind in range(len(test.e2_arr)):
                 if test.name == 'Fair SD TS':
                     for d in range(len(test.delta_arr)):
-                        plt.plot(x[start_index:],
-                                 np.min(np.min(test.frac_smooth_fair[e1_ind, e2_ind, d], axis=1), axis=1)
-                                 [start_index:],
+                        y = np.min(np.min(test.frac_smooth_fair[e1_ind, e2_ind, d], axis=2), axis=1)
+                        plt.plot(x[start_index:],y[start_index:],
                                  label=test.get_name(test.e1_arr[e1_ind], test.e2_arr[e2_ind], test.delta_arr[d]))
+                        if test.average_rounds_exploring[e2_ind, d] < T:
+                            plt.plot(test.average_rounds_exploring[e2_ind, d]-1, y[int(test.average_rounds_exploring[e2_ind, d]) -1], 'g*')
+
                 else:
                     plt.plot(x[start_index:],
                                  np.min(np.min(test.frac_smooth_fair[e1_ind, e2_ind], axis=1),  axis=1)
