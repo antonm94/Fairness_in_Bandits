@@ -26,6 +26,7 @@ class BernThompsonSampling(object):
         self.s = np.full((self.T+1, self.k), .5)
         self.f = np.full((self.T+1, self.k), .5)
         self.n = np.zeros((self.T, self.k))
+        self.not_ts = np.zeros(self.T)
 
     def run(self):
         for t in range(self.T):
@@ -52,8 +53,6 @@ class BernThompsonSampling(object):
 
         if t>0:
             self.n[t] = self.n[t-1]
-
-
 
         self.s[t+1] = self.s[t]
         self.f[t+1] = self.f[t]
@@ -132,15 +131,12 @@ class BernThompsonSampling(object):
                 for a in arms:
                     self.pi_from_perm_prob(a, perm_prod, r_permutations, r_sum, t)
             else:
+                """every arm need entry in counts otherwise dim pi  not k -> add and subtract """
                 n_iter = 1000
-                for i in range(n_iter):
-                    a = np.zeros(self.k)
-                    theta = np.random.beta(self.s[t], self.f[t], (n_iter, self.k))
-                    max_theta =
-                    max_theta = np.where(self.theta == self.theta.max())[0]
-                    ++a[np.random.choice(max_theta)]
-                np.divide(a, n_iter)
-
+                theta = np.random.beta(self.s[t], self.f[t], (n_iter, self.k))
+                max_theta = np.append(np.argmax(theta, axis=1), np.arange(self.k))
+                counts = np.subtract(np.bincount(max_theta).astype(np.float), 1)
+                self.pi[t] = np.divide(counts, n_iter)
         # print self.pi
 
     def pi_from_perm_prob(self, a, perm_prod, r_permutations, r_sum, t):

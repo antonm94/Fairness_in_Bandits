@@ -19,7 +19,6 @@ class TSTest:
         self.distance = distance
         self.n_iter = n_iter
         self.r_theta = bandits.theta
-        self.p_star = [float(i) / sum(self.r_theta) for i in self.r_theta]
         self.achievable_delta = np.zeros((len(e1_arr), len(e2_arr), self.T))
         self.subjective_achievable_delta = np.zeros((len(e1_arr), len(e2_arr), self.T))
 
@@ -38,6 +37,8 @@ class TSTest:
         self.name = 'TS'
         self.lam = 0
         self.min_e1 = np.zeros((len(e2_arr), len(delta_arr), self.T))
+        self.subjective_min_e1 = np.zeros((len(e2_arr), len(delta_arr), self.T))
+
 
     def get_name(self, e1=-1, e2=-1, delta=-1):
         s = self.name
@@ -100,7 +101,7 @@ class TSTest:
     def calc_fairness_regret(self):
         fairness_regret = np.zeros(self.T)
         for t in range(self.T):
-            fairness_regret[t] = sum([max(self.p_star[i] - self.curr_test.pi[t][i], 0.) for i in range(self.k)])
+            fairness_regret[t] = sum([max(self.bandits.p_star[i] - self.curr_test.pi[t][i], 0.) for i in range(self.k)])
         return fairness_regret
 
 
@@ -108,7 +109,8 @@ class TSTest:
         distance_to_max = max(self.r_theta) - self.r_theta
         return np.apply_along_axis(lambda x: np.sum(x * distance_to_max), 1, self.average_n)
 
-    def analyse(self, regret=True, fair_regret=True, smooth_fair = True, subjective_smooth_fair = False, minimum_e1=True):
+    def analyse(self, regret=True, fair_regret=True, smooth_fair = True, subjective_smooth_fair = False, minimum_e1=True,
+                subjective_minimum_e1=False):
         # file_name = self.bandits.data_set_name + '/' + self.name + '/N_ITER_{}'.format(
         #     int(self.n_iter)) + '_T_{}'.format(self.T)
         # cwd = os.getcwd()
@@ -127,6 +129,8 @@ class TSTest:
         # n = np.zeros((int(self.n_iter), self.T, self.k))
         if minimum_e1:
             min_e1 = np.zeros((len(self.e2_arr), self.T, int(self.n_iter)))
+        if subjective_minimum_e1:
+            subjective_min_e1 = np.zeros((len(self.e2_arr), self.T, int(self.n_iter)))
         for it in range(int(self.n_iter)):
 
             self.curr_test.run()
@@ -160,6 +164,17 @@ class TSTest:
                                 e1 = max(e1, curr_e1)
                         min_e1[e2_ind, t, it] = e1
 
+            if subjective_minimum_e1:
+                for e2_ind, e2 in enumerate(self.e2_arr):
+                    for t in range(self.T):
+                        e1 = 0
+                        for i in range(self.k):
+                            for j in range(self.k):
+                                curr_e1 = fairness_calc.get_e1_smooth_fairness(e2, i, j, self.curr_test.pi[t],
+                                                                               self.curr_test.r_h[t], self.distance)
+                                e1 = max(e1, curr_e1)
+                        subjective_min_e1[e2_ind, t, it] = e1
+
             self.curr_test.reset()
 
 
@@ -170,7 +185,13 @@ class TSTest:
                     for t in range(self.T):
                         self.min_e1[e2_ind, delta_ind, t] \
                             = min_e1[e2_ind, t, min(int(math.ceil((1-delta)*self.n_iter)), int(self.n_iter-1))]
-
+        if subjective_minimum_e1:
+            subjective_min_e1.sort(axis=-1)
+            for delta_ind, delta in enumerate(self.delta_arr):
+                for e2_ind, e2 in enumerate(self.e2_arr):
+                    for t in range(self.T):
+                        self.subjective_min_e1[e2_ind, delta_ind, t] \
+                            = subjective_min_e1[e2_ind, t, min(int(math.ceil((1 - delta) * self.n_iter)), int(self.n_iter - 1))]
 
         if smooth_fair:
             for i in range(len(self.e1_arr)):

@@ -4,7 +4,7 @@ import logging
 import warnings
 import numpy as np
 from matplotlib import rc
-
+import os
 
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -152,7 +152,8 @@ def plot_smooth_fairness(test_cases):
 
 
 def plot_delta_subjective_fair(test_cases, start_index=0):
-    x = range(test_cases[0].T)
+    T = test_cases[0].T
+    x = range(T)
     for test in test_cases:
         # if test.name == 'Thompson Sampling':
         for e1_ind in range(len(test.e1_arr)):
@@ -166,8 +167,8 @@ def plot_delta_subjective_fair(test_cases, start_index=0):
                 else:
                         plt.plot(x[start_index:],
                                  np.min(np.min(test.frac_subjective_smooth_fair[e1_ind, e2_ind], axis=1),  axis=1)
-                                 [start_index:],
-                                     label=test.get_name(test.e1_arr[e1_ind], test.e2_arr[e2_ind]))
+                                 [start_index:],label=test.get_name(test.e1_arr[e1_ind], test.e2_arr[e2_ind]))
+
 
 
                     # xmin = np.amin(np.min(np.min(test.frac_subjective_smooth_fair[e1_ind, e2_ind], axis=1), axis=1))
@@ -179,8 +180,16 @@ def plot_delta_subjective_fair(test_cases, start_index=0):
 
     plt.xlabel(r'T \sigma')
     plt.ylabel('Subjective Smooth fair with probability')
-
     plt.legend()
+
+    i = 0
+    name = 'delta_smooth_fair_{}'.format(T)+'_'+format(i) + '.png'
+
+    while os.path.exists(name):
+        i += 1
+        name = 'delta_smooth_fair_{}'.format(T) + '_' + format(i) + '.png'
+    plt.savefig(name, bbox_inches='tight')
+
     # bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     plt.show()
 
@@ -216,10 +225,16 @@ def plot_delta_smooth_fair(test_cases, start_index=0):
 
     plt.xlabel(r'T \sigma')
     plt.ylabel('Smooth fair with probability')
-    plt_name = 'delta_smooth_fair_{}'.format(T)+'.png'
-    plt.savefig('delta_smooth_fair.png', bbox_inches='tight')
-
     plt.legend()
+
+    i = 0
+    name = 'delta_smooth_fair_{}'.format(T)+'_'+format(i) + '.png'
+    while os.path.exists(name):
+        i += 1
+        name = 'delta_smooth_fair_{}'.format(T) + '_' + format(i) + '.png'
+    plt.savefig(name, bbox_inches='tight')
+
+
     # bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     plt.show()
 
@@ -261,27 +276,43 @@ def plot_average_total_regret(test_cases):
     #bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     plt.show()
 
-def plot_lambda_regret_tradeoff(self, lam):
-    x = range(test_cases[0].T)
-    n_lam = len(lam)
-    total_regret = np.zeros(n_lam)
-    fairness_regret = np.zeros(n_lam)
-    for i in range(n_lam):
-        if type(self.test_cases[i]) is not fair_sd_ts.FairStochasticDominance:
-            total_regret[i] = self.test_cases[i].regret[-1]
-            fairness_regret[i] = self.test_cases[i].average_fairness_regret[-1]
+def plot_lambda_regret_tradeoff(test_cases):
+    lam_arr = []
+    total_regret = []
+    fairness_regret = []
+
+    for test in test_cases:
+        lam_arr.append(test.lam)
+        if test.name != 'Fair SD TS':
+            total_regret.append(test.average_regret[-1])
+            fairness_regret.append(test.average_fairness_regret[-1])
         else:
-            total_regret[i] = self.test_cases[i].regret[0][0][-1]
-            fairness_regret[i] = self.test_cases[i].average_fairness_regret[0][0][-1]
-    plt.plot(lam, total_regret, label='modification regret')
-    plt.plot(lam, fairness_regret, label='fairness regret')
-    plt.xlabel('Lambda')
-    plt.ylabel('regret')
-    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+            total_regret.append(test.average_regret[0][0][-1])
+            fairness_regret.append(test.average_fairness_regret[0][0][-1])
+
+    fig, ax1 = plt.subplots()
+    ax1.plot(lam_arr, total_regret, 'b-')
+    ax1.set_xlabel('Lambda (/lambda)')
+    # Make the y-axis label, ticks and tick labels match the line color.
+    ax1.set_ylabel('Regret', color='b')
+    ax1.tick_params('y', colors='b')
+
+    ax2 = ax1.twinx()
+    ax2.plot(lam_arr, fairness_regret, 'r-')
+    ax2.set_ylabel('Cumulative Fairness Regret', color='r')
+    ax2.tick_params('y', colors='r')
+    fig.tight_layout()
+
+    i = 0
+    name = 'regret_tradeoff_{}'.format(test_cases[0].T) + '_' + format(i) + '.png'
+    while os.path.exists(name):
+        i += 1
+        name = 'regret_tradeoff_{}'.format(test_cases[0].T) + '_' + format(i) + '.png'
+    plt.savefig(name, bbox_inches='tight')
+
     plt.show()
 
 def plot_regret_tradeoff(self, lam):
-    x = range(self.T)
     n_lam = len(lam)
     total_regret = np.zeros(n_lam)
     fairness_regret = np.zeros(n_lam)

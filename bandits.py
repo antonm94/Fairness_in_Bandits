@@ -8,7 +8,7 @@ class Bandits:
         self.arms = arms
         self.k = len(arms)
         self.theta = self.get_mean()
-        p_star = self.calc_p_star()
+        self.p_star = self.calc_p_star()
         self.data_set_name = data_set_name
 
     def get_mean(self):

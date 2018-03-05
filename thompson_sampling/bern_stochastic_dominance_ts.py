@@ -6,7 +6,12 @@ class BernStochasticDominance(BernThompsonSampling):
 
     def __init__(self, bandits, T, lam=1):
         BernThompsonSampling.__init__(self, bandits, T)
+        self.lam = lam
         self.not_ts = np.random.binomial(1, np.full(T, lam)) # decide if TS or SD TS
+
+    def reset(self):
+        BernThompsonSampling.reset(self)
+        self.not_ts = np.random.binomial(1, np.full(self.T, self.lam)) # decide if TS or SD TS
 
 
     def run(self):
