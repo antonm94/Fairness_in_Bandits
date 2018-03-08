@@ -30,10 +30,11 @@ def c_alg(e2_arr, delta_arr, realTheta):
         for j in range(k):
            max_divergence = max(total_variation_distance([realTheta[i],
                                 1 - realTheta[i]], [realTheta[j], 1 - realTheta[j]]), max_divergence)
-
+           #max_divergence = 1
     c = np.zeros((len(e2_arr), len(delta_arr)))
     for e2_ind, e2, in enumerate(e2_arr):
         for delta_ind, delta in enumerate(delta_arr):
            c[e2_ind, delta_ind] = (pow(2.*max_divergence + 1, 2.)  * (math.log(2) - math.log(delta))) / (2 * pow(e2, 2.))
 
     return c
+

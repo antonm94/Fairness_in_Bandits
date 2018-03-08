@@ -1,10 +1,5 @@
 from load_data import load_data
-from distance import total_variation_distance
-from test_instances.ts_test import TSTest
-from test_instances.fair_sd_ts_test import FairSDTest
-from test_instances.sd_ts_test import SDTest
 import numpy as np
-import test_instances.plots as test
 import itertools
 from fairness_calc import smooth_fairness
 

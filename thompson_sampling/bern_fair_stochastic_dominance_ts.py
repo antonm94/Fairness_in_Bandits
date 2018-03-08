@@ -5,14 +5,15 @@ import numpy as np
 from calc_c import c_alg2
 from calc_c import c_alg
 from fairness_calc import smooth_fairness
-
 from bern_stochastic_dominance_ts import BernStochasticDominance
 from bern_ts import BernThompsonSampling
 import itertools
+from sets import Set
+
 
 class BernFairStochasticDominance(BernStochasticDominance, BernThompsonSampling):
 
-    def __init__(self, bandits, T, e2, delta, lam=1, mod=0, c=0):
+    def __init__(self, bandits, T, e2, delta, lam=1, mod=0, c=0, smart_exploration=False):
         BernStochasticDominance.__init__(self, bandits, T, lam)
         self.rounds_exploring = 0
         self.rounds_exploiting = 0
@@ -20,14 +21,24 @@ class BernFairStochasticDominance(BernStochasticDominance, BernThompsonSampling)
         self.e2 = e2
         self.delta = delta
         self.c = c
-
+        self.smart_explore = smart_exploration
 
     def reset(self):
         BernStochasticDominance.reset(self)
         self.rounds_exploring = 0
         self.rounds_exploiting = 0
 
+
+    def smart_exploration(self, arms):
+        if len(arms) == 0:
+            arms = range(self.k)
+        a = random.choice(arms)
+        arms.remove(a)
+        return a, arms
+
+
     def run(self):
+        arms = range(self.k)
         o = np.ones(self.k)
         exploiting = False
         for t in range(self.T):
@@ -42,16 +53,12 @@ class BernFairStochasticDominance(BernStochasticDominance, BernThompsonSampling)
                     a = BernStochasticDominance.get_a(self,  t)
 
                 else:
-                    # exploration
                     self.rounds_exploring = self.rounds_exploring + 1
-                    # if self.mod:
-                    #     a = np.random.choice(tuple(o))
-                    #     p = 1. / len(o)
-                    #     for i in o:
-                    #         self.pi[t][i] = p
-                    #     print self.pi[t]
 
-                    a = np.random.choice(self.k)
+                    if self.smart_explore:
+                        a, arms = self.smart_exploration(arms)
+                    else:
+                        a = np.random.choice(self.k)
 
             else:
                 a = BernThompsonSampling.get_a(self, t)
@@ -67,3 +74,6 @@ class BernFairStochasticDominance(BernStochasticDominance, BernThompsonSampling)
                     exploiting = True
         self.calc_r_h()
         self.calc_pi(self.rounds_exploring)
+
+
+

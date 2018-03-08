@@ -5,6 +5,8 @@ import os
 path = os.path.dirname(os.path.abspath(__file__))
 
 
+
+
 def bar_exam_data():
     df = pd.read_sas(path +'/DataSets/LawSchool/BarPassage/LSAC_SAS/lsac.sas7bdat')
     bar = df[['ID', 'sex', 'race1', 'pass_bar' , 'bar']]
@@ -57,21 +59,27 @@ def adult_data():
 
     #return bandits.Bandits(arm)
 
-def load_data(s,  p=None):
-    if s == 'Bar Exam':
+def load_data(s):
+    data = {
+        'Bar Exam': 'Bar Exam',
+        'Default on Credit': 'Default on Credit',
+        '0': [0.001, 0.00001, 0.98, 0.97, 0.96],
+        '1': [0.12, 0.2, 0.13, 0.04, 0.10]
+    }
+
+    if data[s] == 'Bar Exam':
         return bar_exam_data()
-    elif s == 'Default on Credit':
+    elif data[s] == 'Default on Credit':
             return default_credit_data()
-    elif s == 'with given distribution':
+    else:
+        p = data[s]
         arm = np.empty((len(p), 1000), dtype=object)
         for i in range(len(p)):
             arm[i] = np.random.binomial(1, p[i], 1000)
 
-        return bandits.Bandits(arm, 'random')
-    else:
-        print 'unknown data set'
+        return bandits.Bandits(arm, 'Data'+s)
 
 if __name__ == '__main__':
     #adult_data()
-    bandits = bar_exam_data()
+    bandits = load_data('0')
     print bandits.get_mean()

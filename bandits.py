@@ -2,6 +2,7 @@ import numpy as np
 import random
 import itertools
 import thompson_sampling.calc_c
+from fairness_calc import isclose
 class Bandits:
 
     def __init__(self, arms, data_set_name='no_name'):
@@ -36,7 +37,7 @@ class Bandits:
                 elif not r_sum[perm_i]:
                     p_star[a] += perm_prod[perm_i] / self.k
 
-        if sum(p_star) != 1.0:
+        if not isclose(sum(p_star), 1.0):
             print "p star doesn't sum to one"
         return p_star
 
