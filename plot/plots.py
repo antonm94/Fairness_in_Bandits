@@ -84,9 +84,11 @@ def plot_delta_smooth_fair(test_cases, start_index=0):
                                         axis=1)[start_index:]
                         plt.plot(x[start_index:], y, label=algo_name, linestyle=ds_styles[ds_name],
                          color=algo_colors[algo_name])
+
                         explore_end_x = int(test.average_rounds_exploring[e2_ind, delta_ind])
-                        explore_end_y = y[explore_end_x]
-                        plt.plot(explore_end_x, explore_end_y, marker='o', color=algo_colors[algo_name])
+                        if explore_end_x < T:
+                            explore_end_y = y[explore_end_x]
+                            plt.plot(explore_end_x, explore_end_y, marker='o', color=algo_colors[algo_name])
                 else:
                     algo_name = test.get_name(e1=e1, e2=e2)
                     plt.plot(x[start_index:],
@@ -129,12 +131,13 @@ def plot_fairness_regret(test_cases):
             for e2_ind, e2 in enumerate(test.e2_arr):
                 for delta_ind, delta in enumerate(test.delta_arr):
                     algo_name = test.get_name(e2=e2, delta=delta)
-
-                    plt.plot(x, np.add.accumulate(test.average_fairness_regret[e2_ind][delta_ind]), label=algo_name, linestyle=ds_styles[ds_name],
+                    y = np.add.accumulate(test.average_fairness_regret[e2_ind][delta_ind])
+                    plt.plot(x, y, label=algo_name, linestyle=ds_styles[ds_name],
                          color=algo_colors[algo_name])
                     explore_end_x = int(test.average_rounds_exploring[e2_ind, delta_ind])
-                    explore_end_y = y[explore_end_x]
-                    plt.plot(explore_end_x, explore_end_y, marker='o', color=algo_colors[algo_name])
+                    if explore_end_x < T:
+                        explore_end_y = y[explore_end_x]
+                        plt.plot(explore_end_x, explore_end_y, marker='o', color=algo_colors[algo_name])
         else:
             algo_name = test.get_name()
             plt.plot(x, np.add.accumulate(test.average_fairness_regret), label=algo_name, linestyle=ds_styles[ds_name],
@@ -178,12 +181,14 @@ def plot_average_total_regret(test_cases):
             for e2_ind, e2 in enumerate(test.e2_arr):
                 for delta_ind, delta in enumerate(test.delta_arr):
                     algo_name = test.get_name(e2=e2, delta=delta)
-                    plt.plot(x, test.average_regret[e2_ind, delta_ind], label=algo_name,
+                    y = test.average_regret[e2_ind, delta_ind]
+                    plt.plot(x, y, label=algo_name,
                              linestyle=ds_styles[ds_name],
                              color=algo_colors[algo_name])
                     explore_end_x = int(test.average_rounds_exploring[e2_ind, delta_ind])
-                    explore_end_y = y[explore_end_x]
-                    plt.plot(explore_end_x, explore_end_y, marker='o', color=algo_colors[algo_name])
+                    if explore_end_x < T:
+                        explore_end_y = y[explore_end_x]
+                        plt.plot(explore_end_x, explore_end_y, marker='o', color=algo_colors[algo_name])
         else:
             algo_name = test.get_name()
             plt.plot(x, test.average_regret, label=algo_name, linestyle=ds_styles[ds_name],
@@ -219,7 +224,7 @@ def plot_lambda_regret_tradeoff(test_cases):
                 for delta_ind, delta in enumerate(test.delta_arr):
                     total_regret.append(test.average_regret[-1])
                     fairness_regret.append(test.average_fairness_regret[-1])
-                    
+
         else:
             total_regret.append(test.average_regret[0][0][-1])
             fairness_regret.append(test.average_fairness_regret[0][0][-1])
@@ -281,8 +286,15 @@ def plot_min_e1(test_cases):
         for e2_ind, e2 in enumerate(test.e2_arr):
             for delta_ind, delta in enumerate(test.delta_arr):
                 algo_name = test.get_name(delta=delta, e2=e2)
-                plt.plot(x, test.min_e1[e2_ind, delta_ind], linestyle=ds_styles[ds_name],
+                y = test.min_e1[e2_ind, delta_ind]
+                plt.plot(x, y, linestyle=ds_styles[ds_name],
                          color=algo_colors[algo_name], label=algo_name)
+                if test.name == 'Fair SD TS':
+                    explore_end_x = int(test.average_rounds_exploring[e2_ind, delta_ind])
+                    if explore_end_x < T:
+                        explore_end_y = y[explore_end_x]
+                        plt.plot(explore_end_x, explore_end_y, marker='o', color=algo_colors[algo_name])
+
 
     plt.xlabel('T')
     plt.ylabel('minimum $\epsilon_1$ to be Smooth Fair')
@@ -333,6 +345,10 @@ def get_labels(algo_colors, ds_style):
 def get_colors_and_styles(test_cases):
     sns.set_palette("husl")
     colors = sns.color_palette()
+    cmap = plt.get_cmap('jet')
+    colors = cmap(np.linspace(0, 1.0, 20))
+
+
     linestyles = ['-', '--', '-.', ':']
     ds_styles = {}
     algo_colors = {}
@@ -360,6 +376,10 @@ def get_colors_and_styles(test_cases):
 def get_colors_and_styles_delta(test_cases):
     sns.set_palette("husl")
     colors = sns.color_palette()
+    cmap = plt.get_cmap('jet')
+    colors = cmap(np.linspace(0, 1.0, 20))
+
+
     linestyles = ['-', '--', '-.', ':']
     ds_styles = {}
     algo_colors = {}
@@ -391,6 +411,10 @@ def get_colors_and_styles_delta(test_cases):
 def get_colors_and_styles_regret(test_cases):
     sns.set_palette("husl")
     colors = sns.color_palette()
+    cmap = plt.get_cmap('jet')
+    colors = cmap(np.linspace(0, 1.0, 20))
+
+
     linestyles = ['-', '--', '-.', ':']
     ds_styles = {}
     algo_colors = {}

@@ -64,7 +64,9 @@ def load_data(s):
         'Bar Exam': 'Bar Exam',
         'Default on Credit': 'Default on Credit',
         '0': [0.001, 0.00001, 0.98, 0.97, 0.96],
-        '1': [0.12, 0.2, 0.13, 0.04, 0.10]
+        '1': [0.12, 0.2, 0.13, 0.04, 0.10],
+        '2': [0, 1, 0, 0, 0],
+        '3': [0.5, 0.5, 0.5, 0.5, 0.5]
     }
 
     if data[s] == 'Bar Exam':
@@ -81,5 +83,18 @@ def load_data(s):
 
 if __name__ == '__main__':
     #adult_data()
-    bandits = load_data('0')
-    print bandits.get_mean()
+    b = load_data('Default on Credit')
+    print b.get_max_D()
+    b = load_data('Bar Exam')
+    print b.get_max_D()
+    b = load_data('0')
+    print b.get_max_D()
+
+    b = load_data('1')
+    print b.get_max_D()
+
+    b = load_data('2')
+    print b.get_max_D()
+
+    b = load_data('3')
+    print b.get_max_D()

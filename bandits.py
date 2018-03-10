@@ -3,6 +3,7 @@ import random
 import itertools
 import thompson_sampling.calc_c
 from fairness_calc import isclose
+from distance import *
 class Bandits:
 
     def __init__(self, arms, data_set_name='no_name'):
@@ -50,3 +51,11 @@ class Bandits:
                 r_prop.append(1 - self.theta[i])
 
         return r_prop
+
+
+    def get_max_D(self, distance=total_variation_distance):
+        dmax = 0.
+        for i in range(self.k):
+            for j in range(self.k):
+                dmax = max(distance([self.theta[i], 1-self.theta[i]], [self.theta[j], 1-self.theta[j]]), dmax)
+        return dmax

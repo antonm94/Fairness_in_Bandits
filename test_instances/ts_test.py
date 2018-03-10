@@ -6,6 +6,7 @@ import os
 import sys
 import math
 import pickle
+import datetime
 
 class TSTest:
     def __init__(self, n_iter, bandits, T, e1_arr, e2_arr, delta_arr, distance=total_variation_distance):
@@ -201,14 +202,16 @@ class TSTest:
 
     def save_object(self):
         i = 0
-        directory = 'objects/' + self.bandits.data_set_name + '/' + self.name
+        date_time= 'test-{date:%Y-%m-%d_%H:%M:%S}'.format(date=datetime.datetime.now())
+
+        directory = 'objects/{}'.format(self.T) +'/'
         if not os.path.exists(directory):
             os.makedirs(directory)
-        file_name = directory + '/N_ITER_{}'.format(
-            int(self.n_iter)) + '_T_{}'.format(self.T) + '_{}'.format(i)
+        file_name = directory + self.bandits.data_set_name + '_' + self.name + '_N_ITER_{}'.format(
+            int(self.n_iter)) + date_time
         while os.path.exists(file_name):
-            i += 1
-            ffile_name = directory + '/N_ITER_{}'.format(
-            int(self.n_iter)) + '_T_{}'.format(self.T) + '_{}'.format(i)
+             i += 1
+             file_name = directory + self.bandits.data_set_name + '_' + self.name \
+                         + '_N_ITER_{}'.format(int(self.n_iter)) + date_time + '_{}'.format(i)
         with open(file_name + '.file', "wb") as f:
             pickle.dump(self, f, pickle.HIGHEST_PROTOCOL)
