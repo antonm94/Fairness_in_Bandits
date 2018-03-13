@@ -12,3 +12,8 @@ def kl_divergence(p, q):
 
 
 
+if __name__ == '__main__':
+    p = [0.4, 0.6]
+    q = [0.6, 0.4]
+    print total_variation_distance(p,q)
+    print kl_divergence(p,q)

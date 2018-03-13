@@ -13,9 +13,14 @@ LOGGING = 1
 if LOGGING > 0:
     logger = logging.getLogger(__name__)
 
+# sns.set_palette("husl")
+# colors = sns.color_palette()
+cmap = plt.get_cmap('jet')
+colors = cmap(np.linspace(0, 1.0, 60))
 
+colors = sns.husl_palette(10) + sns.color_palette("cubehelix", 8)
 
-
+linestyles = ['-', '--', '-.', ':']
 
 def plot_delta_subjective_fair(test_cases, start_index=0):
     T = test_cases[0].T
@@ -56,7 +61,7 @@ def plot_delta_subjective_fair(test_cases, start_index=0):
 
     plt.xlabel('T')
     plt.ylabel('Subjective Smooth fair with probability')
-    plt.legend(handles=labels)
+    plt.legend(handles=labels, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 
     i = 0
     name = 'delta_smooth_fair_{}'.format(T)
@@ -65,7 +70,7 @@ def plot_delta_subjective_fair(test_cases, start_index=0):
     plt.show()
 
 
-def plot_delta_smooth_fair(test_cases, start_index=0):
+def plot_delta_smooth_fair(test_cases, start_index=0, end_index=test_cases[0].T):
     T = test_cases[0].T
     x = range(T)
 
@@ -105,7 +110,7 @@ def plot_delta_smooth_fair(test_cases, start_index=0):
 
     plt.xlabel('T')
     plt.ylabel('Smooth fair with probability')
-    plt.legend(handles=labels)
+    plt.legend(handles=labels, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 
     name = 'delta_smooth_fair_{}'.format(T)
     save_plot(name)
@@ -156,7 +161,7 @@ def plot_fairness_regret(test_cases):
     # # Add the legend manually to the current Axes.
     # plt.gca().add_artist(bound)
     labels.append(mlines.Line2D([], [], color='k', linestyle=':', label='regret bound O((k*T)^2/3)'))
-    plt.legend(handles=labels)
+    plt.legend(handles=labels, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 
 
 
@@ -196,7 +201,7 @@ def plot_average_total_regret(test_cases):
 
     plt.xlabel('T')
     plt.ylabel('Total Regret')
-    plt.legend(handles=labels)
+    plt.legend(handles=labels, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 
     name = 'total_regret{}'.format(T)
     save_plot(name)
@@ -270,7 +275,7 @@ def plot_regret_tradeoff(self, lam):
 
     plt.xlabel('Lambda')
     plt.ylabel('regret')
-    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., )
     plt.show()
 
 
@@ -301,7 +306,7 @@ def plot_min_e1(test_cases):
     name = 'subjective_min_e1_{}_'.format(T)
 
 
-    plt.legend(handles=labels)
+    plt.legend(handles=labels, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     save_plot(name)
     plt.show()
 
@@ -327,7 +332,7 @@ def plot_subjective_min_e1(test_cases):
     plt.ylabel('minimum $\epsilon_1$ to be Subjective Smooth Fair')
     name = 'subjective_min_e1_{}_'.format(T)
 
-    plt.legend(handles=labels)
+    plt.legend(handles=labels, bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     save_plot(name)
     plt.show()
 
@@ -343,13 +348,6 @@ def get_labels(algo_colors, ds_style):
 
 
 def get_colors_and_styles(test_cases):
-    sns.set_palette("husl")
-    colors = sns.color_palette()
-    cmap = plt.get_cmap('jet')
-    colors = cmap(np.linspace(0, 1.0, 20))
-
-
-    linestyles = ['-', '--', '-.', ':']
     ds_styles = {}
     algo_colors = {}
     ds_ind = 0
@@ -374,13 +372,6 @@ def get_colors_and_styles(test_cases):
 
 
 def get_colors_and_styles_delta(test_cases):
-    sns.set_palette("husl")
-    colors = sns.color_palette()
-    cmap = plt.get_cmap('jet')
-    colors = cmap(np.linspace(0, 1.0, 20))
-
-
-    linestyles = ['-', '--', '-.', ':']
     ds_styles = {}
     algo_colors = {}
     ds_ind = 0
@@ -409,13 +400,6 @@ def get_colors_and_styles_delta(test_cases):
 
 
 def get_colors_and_styles_regret(test_cases):
-    sns.set_palette("husl")
-    colors = sns.color_palette()
-    cmap = plt.get_cmap('jet')
-    colors = cmap(np.linspace(0, 1.0, 20))
-
-
-    linestyles = ['-', '--', '-.', ':']
     ds_styles = {}
     algo_colors = {}
     ds_ind = 0

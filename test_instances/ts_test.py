@@ -63,6 +63,16 @@ class TSTest:
             s = s + ' delta={}'.format(delta)
         return s
 
+    def get_label_name(self, e1=-1, e2=-1, delta=-1):
+        s = self.name
+        if not e1 == -1:
+            s = s + ' $\epsilon_1$={}'.format(e1)
+        if not e2 == -1:
+            s = s + ' $\epsilon_2$={}'.format(e2)
+        if not delta == -1:
+            s = s + ' $\delta$={}'.format(delta)
+        return s
+
     def calc_smooth_fairness(self, e1_ind, e2_ind, e2_times=1):
 
         for t in range(self.T):
@@ -162,8 +172,8 @@ class TSTest:
                                                                                self.curr_test.r_h[t], self.distance)
                                 e1 = max(e1, curr_e1)
                         subjective_min_e1[e2_ind, t, it] = e1
-            self.curr_test.reset()
 
+            self.curr_test.reset()
 
         if minimum_e1:
             min_e1.sort(axis=-1)
@@ -173,7 +183,9 @@ class TSTest:
                         self.min_e1[e2_ind, delta_ind, t] \
                             = min_e1[e2_ind, t, min(int(math.ceil((1-delta)*self.n_iter)), int(self.n_iter-1))]
         if subjective_minimum_e1:
+            print subjective_min_e1
             subjective_min_e1.sort(axis=-1)
+            print subjective_min_e1
             for delta_ind, delta in enumerate(self.delta_arr):
                 for e2_ind, e2 in enumerate(self.e2_arr):
                     for t in range(self.T):

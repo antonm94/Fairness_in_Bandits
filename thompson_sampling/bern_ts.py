@@ -36,7 +36,6 @@ class BernThompsonSampling(object):
 
             reward = self.bandits.pull(a)
             self.update(t, a, reward)
-
         self.calc_r_h()
         self.calc_pi()
 

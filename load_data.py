@@ -62,8 +62,8 @@ def adult_data():
 def load_data(s):
     data = {
         'Bar Exam': 'Bar Exam',
-        'Default on Credit': 'Default on Credit',
-        '0': [0.001, 0.00001, 0.98, 0.97, 0.96],
+        'Default on Credit':  [0.24167227,  0.20776281],
+        '0': [0.001, 0., 1., 0.97, 0.96],
         '1': [0.12, 0.2, 0.13, 0.04, 0.10],
         '2': [0, 1, 0, 0, 0],
         '3': [0.5, 0.5, 0.5, 0.5, 0.5]
@@ -71,13 +71,13 @@ def load_data(s):
 
     if data[s] == 'Bar Exam':
         return bar_exam_data()
-    elif data[s] == 'Default on Credit':
-            return default_credit_data()
+    # elif data[s] == 'Default on Credit':
+    #         return default_credit_data()
     else:
         p = data[s]
-        arm = np.empty((len(p), 1000), dtype=object)
+        arm = np.empty((len(p), 10000), dtype=object)
         for i in range(len(p)):
-            arm[i] = np.random.binomial(1, p[i], 1000)
+            arm[i] = np.random.binomial(1, p[i], 10000)
 
         return bandits.Bandits(arm, 'Data'+s)
 
@@ -85,16 +85,30 @@ if __name__ == '__main__':
     #adult_data()
     b = load_data('Default on Credit')
     print b.get_max_D()
+    print b.get_mean()
     b = load_data('Bar Exam')
     print b.get_max_D()
+    print b.get_mean()
+
     b = load_data('0')
     print b.get_max_D()
+    print b.get_mean()
+
 
     b = load_data('1')
     print b.get_max_D()
+    print b.get_mean()
+
 
     b = load_data('2')
     print b.get_max_D()
+    print b.get_mean()
+
 
     b = load_data('3')
     print b.get_max_D()
+    print b.get_mean()
+
+    b = load_data('Default on Credit')
+    print b.get_max_D()
+    print b.get_mean()
