@@ -4,6 +4,8 @@ import itertools
 import thompson_sampling.calc_c
 from fairness_calc import isclose
 from distance import *
+from thompson_sampling.calc_c import c_alg
+
 class Bandits:
 
     def __init__(self, arms, data_set_name='no_name'):
@@ -12,6 +14,7 @@ class Bandits:
         self.theta = self.get_mean()
         self.p_star = self.calc_p_star()
         self.data_set_name = data_set_name
+
 
     def get_mean(self):
         t = np.zeros(self.k)

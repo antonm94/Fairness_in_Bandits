@@ -53,7 +53,8 @@ class FairSDTest(TSTest):
         return regret
 
     def calc_smooth_fairness(self, e1_ind, e2_ind, d_ind, e2_times=1):
-        for t in range(self.T):
+        self.smooth_fair[e1_ind, e2_ind, d_ind,:self.curr_test.rounds_exploring-1] += 1
+        for t in range(self.curr_test.rounds_exploring, self.T):
             for i in range(self.k):
                 # for j in range(i + 1, self.k):
                 for j in range(self.k):
@@ -99,7 +100,7 @@ class FairSDTest(TSTest):
                         for e1_ind in range(len(self.e1_arr)):
                             self.calc_smooth_fairness(e1_ind, e2_ind, d_ind, e2_times)
                     if minimum_e1:
-                        for t in range(self.T):
+                        for t in range(self.curr_test.rounds_exploring, self.T):
                             e1 = 0
                             for i in range(self.k):
                                 for j in range(self.k):
@@ -115,10 +116,11 @@ class FairSDTest(TSTest):
 
 
                 if minimum_e1:
-                    min_e1.sort(axis=-1)
-                    self.min_e1[e2_ind, d_ind, t] \
-                        = min_e1[
-                        e2_ind, d_ind, t, min(int(math.ceil((1 - d) * self.n_iter)), int(self.n_iter - 1))]
+                    for t in range(self.T):
+                        min_e1.sort(axis=-1)
+                        self.min_e1[e2_ind, d_ind, t] \
+                            = min_e1[
+                            e2_ind, d_ind, t, min(int(math.ceil((1 - d) * self.n_iter)), int(self.n_iter - 1))]
                 if smooth_fair:
                     for e1_ind in range(len(self.e1_arr)):
 

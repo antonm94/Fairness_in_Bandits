@@ -59,7 +59,8 @@ def get_e1_smooth_fairness(e2, i, j, pi, r, distance=total_variation_distance):
     d_r = distance([r[i], 1 - r[i]], [r[j], 1 - r[j]])
     # print "d_r: {}".format(d_r)
     # print 'd_pi: {}'.format(d_pi)
-
+    # print d_pi
+    # print d_r
     if d_pi == 0:
         e1 = 0.
     elif d_r == 0:
@@ -71,7 +72,6 @@ def get_e1_smooth_fairness(e2, i, j, pi, r, distance=total_variation_distance):
             e1 = max(1.-(e2/d_r), 0.0)
         else:
             e1 = max((d_pi - e2) / d_r, 0.0)
-            "not close"
         # print e1
     # if e1 == 0.:
     #     print d_r

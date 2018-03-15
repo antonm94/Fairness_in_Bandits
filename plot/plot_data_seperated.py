@@ -184,6 +184,36 @@ def plot_average_total_regret(test_cases, start_index=0):
     save_plot(name)
     plt.show()
 
+def plot_new_lambda_regret_tradeoff(test_cases):
+
+    Fair_SD_TS_FR = np.zeros()
+    lam_arr = []
+    fr = []
+    r = []
+    for test in test_cases:
+        fr.append(test.average_fairness_regret[-1])
+        r.append(test.average_regret[-1])
+
+    plt.plot(fr, r)
+
+
+
+
+
+
+    # lam_arr.append(test.lam)
+    # if test.name == 'Fair SD TS':
+    #     for e2_ind, e2 in enumerate(test.e2_arr):
+    #         for delta_ind, delta in enumerate(test.delta_arr):
+
+
+
+
+
+
+
+
+
 def plot_lambda_regret_tradeoff(test_cases):
     sns.set_palette("husl")
     colors = sns.color_palette()
@@ -213,7 +243,7 @@ def plot_lambda_regret_tradeoff(test_cases):
 
     fig, ax1 = plt.subplots()
     ax1.plot(lam_arr, total_regret, 'b-')
-    ax1.set_xlabel('Lambda $/lambda$')
+    ax1.set_xlabel('$/lambda$')
     # Make the y-axis label, ticks and tick labels match the line color.
     ax1.set_ylabel('Regret', color='b')
     ax1.tick_params('y', colors='b')
