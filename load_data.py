@@ -79,7 +79,7 @@ def load_data(s):
         for i in range(len(p)):
             arm[i] = np.random.binomial(1, p[i], 10000)
 
-        return bandits.Bandits(arm, 'Data'+s)
+        return bandits.Bandits(arm, 'Data' + s)
 
 if __name__ == '__main__':
     #adult_data()

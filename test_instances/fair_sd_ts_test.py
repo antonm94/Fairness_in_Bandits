@@ -38,6 +38,7 @@ class FairSDTest(TSTest):
         #self.is_subjective_smooth_fair = np.ones((len(e1_arr), len(e2_arr), len(delta_arr), self.T))
 
         self.frac_smooth_fair = np.ones((len(e1_arr), len(e2_arr), len(delta_arr), self.T, self.k, self.k))
+        self.pi = np.zeros((self.T, self.k))
        # self.frac_subjective_smooth_fair = np.ones((len(e1_arr), len(e2_arr), self.T, self.k, self.k))
 
     def get_rounds(self):
@@ -111,7 +112,7 @@ class FairSDTest(TSTest):
                                     e1 = max(e1, curr_e1)
                             min_e1[e2_ind, d_ind, t, it] = e1
 
-
+                    self.pi = self.curr_test.pi
                     self.curr_test.reset()
 
 

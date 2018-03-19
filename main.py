@@ -18,11 +18,12 @@ TEST_FAIR_SD_TS = True
 PLOT = False
 
 N_ITERATIONS = 10.
-T = 50000
+T = 500
 SETS = ['0', 'Bar Exam', 'Default on Credit', '3']
-SETS = ['2']
-# 'Bar Exam'
-SETS = [ 'Bar Exam', '0']
+# SETS = ['2']
+SETS = ['Bar Exam']
+# SETS = [ 'Bar Exam', '0']
+# SETS = ['Default on Credit']
 
 
 if __name__ == '__main__':
@@ -34,6 +35,8 @@ if __name__ == '__main__':
     e2 = [0.05, 0.01]
     delta = [0.01, 0.1, 0.3, 0.5]
     delta = [0.3, 0.4]
+    e2 = [0.09283177667]
+    delta = [0.01414213562]
     if SEED:
         random.seed(0)
         np.random.seed(0)
@@ -57,7 +60,7 @@ if __name__ == '__main__':
     fair_sd_ts_test = []
     if TEST_FAIR_SD_TS:
         for bandit in bandits:
-            fair_sd_ts_test.append(FairSDTest(N_ITERATIONS, bandit, T, e1, e2, delta, lam=1))
+            fair_sd_ts_test.append(FairSDTest(N_ITERATIONS, bandit, T, e1, e2, delta, lam=0.5))
 
     for test in ts_test:
         test.analyse(regret=False, fair_regret=False, smooth_fair=True,
@@ -70,7 +73,7 @@ if __name__ == '__main__':
                      subjective_minimum_e1=False)
 
     for test in fair_sd_ts_test:
-        test.analyse(regret=True, fair_regret=True, smooth_fair=True, minimum_e1=True)
+        test.analyse(regret=True, fair_regret=True, smooth_fair=False, minimum_e1=False)
 
     if PLOT:
         import plot.plot_data_seperated as plt

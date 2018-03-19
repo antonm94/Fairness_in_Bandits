@@ -61,6 +61,7 @@ class BernFairStochasticDominance(BernStochasticDominance, BernThompsonSampling)
                         a = np.random.choice(self.k)
 
             else:
+                self.theta[t] = np.random.beta(self.s[t], self.f[t], self.k)
                 a = BernThompsonSampling.get_a(self, t)
 
             # real bernoulli reward for each arm
