@@ -2,7 +2,7 @@ import math
 
 import numpy as np
 
-from distance import total_variation_distance
+from divergence import total_variation_distance
 
 
 def c_alg2(e2, delta, realTheta, i, k):

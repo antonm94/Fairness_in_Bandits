@@ -12,3 +12,10 @@ import scipy.stats as stats
         return mean, var_sq
 """""""""
 
+
+def update_normal_inverse_gamma(self):
+    for a in range(self.k):
+        self.inv_gamma[a] = stats.invgamma(a=self.alpha[a], loc=0, scale=math.sqrt(self.beta[a]))
+        self.sample_var[a] = self.inv_gamma[a].rvs(1)
+        self.normal[a] = stats.norm(loc=self.mean[a], scale=math.sqrt(self.sample_var[a] * self.v[a]))
+        self.sampled_mu[a] = self.normal[a].rvs(1)

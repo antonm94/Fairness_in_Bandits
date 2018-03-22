@@ -1,16 +1,14 @@
 import fairness_calc
-import thompson_sampling.bern_ts as ts
+import thompson_sampling.normal_IG_ts as ts
 import numpy as np
-from divergence import total_variation_distance
 import os
-import sys
 import math
 import pickle
 import datetime
 
-class TSTest:
-    def __init__(self, n_iter, bandits, T, e1_arr, e2_arr, delta_arr, distance=total_variation_distance):
-        self.curr_test = ts.BernThompsonSampling(bandits, T)
+class NormalTSTest:
+    def __init__(self, n_iter, bandits, T, e1_arr, e2_arr, delta_arr,  mean_0=0., alpha_0=1., beta_0=0., v_0=-1):
+        self.curr_test = ts.NormalThompsonSampling(bandits, T,  mean_0=mean_0, alpha_0=alpha_0, beta_0=beta_0, v_0=v_0)
         self.n_iter = n_iter
         self.bandits = bandits
         self.k = bandits.k
@@ -18,12 +16,9 @@ class TSTest:
         self.e1_arr = e1_arr
         self.e2_arr = e2_arr
         self.delta_arr = delta_arr
-        self.distance = distance
         self.n_iter = n_iter
-        self.r_theta = bandits.theta
         self.achievable_delta = np.zeros((len(e1_arr), len(e2_arr), self.T))
         self.subjective_achievable_delta = np.zeros((len(e1_arr), len(e2_arr), self.T))
-
         self.smooth_fair = np.zeros((len(e1_arr), len(e2_arr), self.T, self.k, self.k))
         self.subjective_smooth_fair = np.zeros((len(e1_arr), len(e2_arr), self.T, self.k, self.k))
 
@@ -80,7 +75,7 @@ class TSTest:
                 for j in range(self.k):
                     self.smooth_fair[e1_ind, e2_ind, t, i, j] += fairness_calc.smooth_fairness(
                         self.e1_arr[e1_ind], e2_times*self.e2_arr[e2_ind], i, j, self.curr_test.pi[t],
-                        self.r_theta, self.distance)
+                        self.bandits)#, self.distance)
 
     def calc_frac_smooth_fair(self, e1_ind, e2_ind):
         for t in range(1, self.T):
@@ -103,7 +98,8 @@ class TSTest:
                 for j in range(self.k):
                     self.subjective_smooth_fair[e1_ind, e2_ind, t, i, j] += fairness_calc.smooth_fairness(
                         self.e1_arr[e1_ind], e2_times * self.e2_arr[e2_ind], i, j, self.curr_test.pi[t],
-                        self.curr_test.r_h[t], self.distance)
+                        self.curr_test.student_t[t])#, self.distance)
+
     def calc_frac_subjective_smooth_fair(self, e1_ind, e2_ind):
         for t in range(1, self.T):
             self.frac_subjective_smooth_fair[e1_ind, e2_ind, t] = np.divide(self.subjective_smooth_fair[e1_ind, e2_ind, t], self.n_iter)
@@ -124,7 +120,7 @@ class TSTest:
 
 
     def get_regret(self):
-        distance_to_max = max(self.r_theta) - self.r_theta
+        distance_to_max = max(self.bandits.mean) - self.bandits.mean,
         return np.apply_along_axis(lambda x: np.sum(x * distance_to_max), 1, self.average_n)
 
     def analyse(self, regret=True, fair_regret=True, smooth_fair = True, subjective_smooth_fair = False, minimum_e1=True,
@@ -157,7 +153,7 @@ class TSTest:
                         for i in range(self.k):
                             for j in range(self.k):
                                 curr_e1 = fairness_calc.get_e1_smooth_fairness(e2, i, j, self.curr_test.pi[t],
-                                                                                 self.r_theta,  self.distance)
+                                                                                 self.bandits)#self.distance
                                                                                 # self.r_theta, self.distance)
                                 e1 = max(e1, curr_e1)
                         min_e1[e2_ind, t, it] = e1
@@ -169,11 +165,11 @@ class TSTest:
                         for i in range(self.k):
                             for j in range(self.k):
                                 curr_e1 = fairness_calc.get_e1_smooth_fairness(e2, i, j, self.curr_test.pi[t],
-                                                                               self.curr_test.r_h[t], self.distance)
+                                                                               self.curr_test.student_t[t])#, self.distance)
                                 e1 = max(e1, curr_e1)
                         subjective_min_e1[e2_ind, t, it] = e1
-
-            self.curr_test.reset()
+            if it < int(self.n_iter)-1:
+                self.curr_test.reset()
 
         if minimum_e1:
             min_e1.sort(axis=-1)
@@ -210,20 +206,20 @@ class TSTest:
         if fair_regret:
             self.average_fairness_regret = np.divide(self.average_fairness_regret, self.n_iter)
 
-        self.save_object()
+        # self.save_object()
 
-    def save_object(self):
-        i = 0
-        date_time= 'test-{date:%Y-%m-%d_%H:%M:%S}'.format(date=datetime.datetime.now())
-
-        directory = 'objects/{}'.format(self.T) +'/'
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-        file_name = directory + self.bandits.data_set_name + '_' + self.name + '_N_ITER_{}'.format(
-            int(self.n_iter)) + date_time
-        while os.path.exists(file_name):
-             i += 1
-             file_name = directory + self.bandits.data_set_name + '_' + self.name \
-                         + '_N_ITER_{}'.format(int(self.n_iter)) + date_time + '_{}'.format(i)
-        with open(file_name + '.file', "wb") as f:
-            pickle.dump(self, f, pickle.HIGHEST_PROTOCOL)
+    # def save_object(self):
+    #     i = 0
+    #     date_time= 'test-{date:%Y-%m-%d_%H:%M:%S}'.format(date=datetime.datetime.now())
+    #
+    #     directory = 'objects/{}'.format(self.T) +'/'
+    #     if not os.path.exists(directory):
+    #         os.makedirs(directory)
+    #     file_name = directory + self.bandits.data_set_name + '_' + self.name + '_N_ITER_{}'.format(
+    #         int(self.n_iter)) + date_time
+    #     while os.path.exists(file_name):
+    #          i += 1
+    #          file_name = directory + self.bandits.data_set_name + '_' + self.name \
+    #                      + '_N_ITER_{}'.format(int(self.n_iter)) + date_time + '_{}'.format(i)
+    #     with open(file_name + '.file', "wb") as f:
+    #         pickle.dump(self, f, pickle.HIGHEST_PROTOCOL)

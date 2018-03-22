@@ -3,7 +3,7 @@ import random
 import itertools
 import thompson_sampling.calc_c
 from fairness_calc import isclose
-from distance import *
+from divergence import *
 from thompson_sampling.calc_c import c_alg
 
 class Bandits:

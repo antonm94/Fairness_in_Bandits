@@ -1,6 +1,6 @@
 import random
 import numpy as np
-from distance import total_variation_distance
+from divergence import total_variation_distance
 
 
 class StochasticDominance(object):

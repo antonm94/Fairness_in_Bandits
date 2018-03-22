@@ -1,6 +1,6 @@
 import thompson_sampling.bern_stochastic_dominance_ts as sd_ts
 from ts_test import TSTest
-from distance import total_variation_distance
+from divergence import total_variation_distance
 
 
 class SDTest(TSTest):

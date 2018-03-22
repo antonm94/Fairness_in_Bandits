@@ -1,7 +1,7 @@
 import thompson_sampling.bern_fair_stochastic_dominance_ts as fair_sd_ts
 from ts_test import TSTest
 import numpy as np
-from distance import total_variation_distance
+from divergence import total_variation_distance
 import fairness_calc
 import os
 import math

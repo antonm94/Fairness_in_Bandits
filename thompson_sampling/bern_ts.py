@@ -68,7 +68,7 @@ class BernThompsonSampling(object):
 
        # self.pi[t] = self.r_1_h[t] / np.sum(self.r_1_h[t])
 
-        self.n[t][a] = self.n[t][a] + 1
+        self.n[t, a] = self.n[t, a] + 1
 
 
     def calc_r_h(self):
