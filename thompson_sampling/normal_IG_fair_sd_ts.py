@@ -1,80 +1,92 @@
-import random
-
 import numpy as np
-
-from calc_c import c_alg2
-from calc_c import c_alg
-from fairness_calc import smooth_fairness
-from bern_stochastic_dominance_ts import BernStochasticDominance
-from bern_ts import BernThompsonSampling
-import itertools
-from sets import Set
+from calc_c import c_alg_normal
+from normal_IG_stochastic_dominance_ts import NormalStochasticDominance
+from normal_IG_ts import NormalThompsonSampling
 
 
-class BernFairStochasticDominance(BernStochasticDominance, BernThompsonSampling):
+class NormalFairStochasticDominance(NormalStochasticDominance, NormalThompsonSampling):
 
-    def __init__(self, bandits, T, e2, delta, lam=1, mod=0, c=0, smart_exploration=False):
-        BernStochasticDominance.__init__(self, bandits, T, lam)
+    def __init__(self, bandits, T, e2, delta, lam=1, mod=0, smart_exploration=False, mean_0=0., alpha_0=1., beta_0=0.):
+        NormalStochasticDominance.__init__(self, bandits, T, lam, mean_0=mean_0, alpha_0=alpha_0,  beta_0=beta_0)
         self.rounds_exploring = 0
         self.rounds_exploiting = 0
         self.mod = mod
         self.e2 = e2
         self.delta = delta
-        self.c = c
+        self.c = c_alg_normal(e2, delta, self.bandits)
         self.smart_explore = smart_exploration
 
     def reset(self):
-        BernStochasticDominance.reset(self)
+        NormalStochasticDominance.reset(self)
         self.rounds_exploring = 0
         self.rounds_exploiting = 0
-
-
-    def smart_exploration(self, arms):
-        if len(arms) == 0:
-            arms = range(self.k)
-        a = random.choice(arms)
-        arms.remove(a)
-        return a, arms
-
+        if self.init_phase:
+            self.init_length = int(self.v_0) * self.k - 1
+        else:
+            self.init_length = 0
 
     def run(self):
-        arms = range(self.k)
+        ''''''''''Exploration'''''''''
+        t_exp=0
         o = np.ones(self.k)
-        exploiting = False
-        for t in range(self.T):
-
-            if self.not_ts[t]:
-                # empty dict evaluate to false
-                if exploiting:
-                    # exploition
-
-                    self.rounds_exploiting = self.rounds_exploiting + 1
-                    self.theta[t] = np.random.beta(self.s[t], self.f[t], self.k)
-                    a = BernStochasticDominance.get_a(self,  t)
-
-                else:
-                    self.rounds_exploring = self.rounds_exploring + 1
-
-                    if self.smart_explore:
-                        a, arms = self.smart_exploration(arms)
-                    else:
-                        a = np.random.choice(self.k)
+        while np.sum(o) and t_exp<self.T:
+            if self.not_ts[t_exp] or t_exp <= self.init_length:
+                a = np.random.choice(self.k)
+                r = self.bandits.pull(a)
+                self.rewards[a] += r
+                self.update_round_x_s(a, r, t_exp)
 
             else:
-                self.theta[t] = np.random.beta(self.s[t], self.f[t], self.k)
-                a = BernThompsonSampling.get_a(self, t)
-
-            # real bernoulli reward for each arm
-            reward = self.bandits.pull(a)
-
-            BernStochasticDominance.update(self, t, a, reward)
-            if o[a] == 1 and (self.n[t, a] > c_alg2(self.e2, self.delta, self.bandits.get_mean(), a, self.k)):
+                NormalThompsonSampling.calc_pi(self, t_exp)
+                a = NormalThompsonSampling.get_a(self)
+                r = self.bandits.pull(a)
+                self.rewards[a] += r
+                self.update_round_x_s(a, r, t_exp)
+                self.update_param(a, t_exp)
+                self.update_distribution(a, t_exp)
+                NormalThompsonSampling.update_samples(self)
+            if self.n[t_exp, a] > self.c:
                 o[a] = 0
-                if np.sum(o) == 0:
-                   # print self.n[:t]
-                    exploiting = True
-        self.calc_r_h()
-        self.calc_pi(self.rounds_exploring)
+            self.rounds_exploring += 1
+            t_exp += 1
+
+        t_exp -= 1
+        self.init_length = t_exp
+        for a in range(self.k):
+            self.update_param(a, t_exp)
+            self.update_distribution(a, t_exp)
+        t_exp += 1
+        '''''''''Exploitation'''''''''
+
+        for t in range(t_exp, self.T):
+            if self.not_ts[t]:
+                NormalStochasticDominance.calc_pi(self, t)
+                a = NormalStochasticDominance.get_a(self)
+                r = self.bandits.pull(a)
+                self.rewards[a] += r
+                self.update_round_x_s(a, r, t)
+                self.update_param(a, t)
+                self.update_distribution(a, t)
+                NormalStochasticDominance.update_samples(self)
+                self.rounds_exploiting += 1
+
+            else:
+                NormalThompsonSampling.calc_pi(self, t)
+                a = NormalThompsonSampling.get_a(self)
+                r = self.bandits.pull(a)
+                self.rewards[a] += r
+                self.update_round_x_s(a, r, t)
+                self.update_param(a, t)
+                self.update_distribution(a, t)
+                NormalThompsonSampling.update_samples(self)
+                self.rounds_exploiting += 1
 
 
 
+
+
+        # print self.pi
+        # for i in range(self.k):
+        #     print self.inv_gamma[i].mean()
+        #     print self.normal[i].mean()
+        #     print self.student_t[-1, i].stats('mv')

@@ -8,6 +8,7 @@ import math
 import pickle
 import datetime
 
+
 class TSTest:
     def __init__(self, n_iter, bandits, T, e1_arr, e2_arr, delta_arr, distance=total_variation_distance):
         self.curr_test = ts.BernThompsonSampling(bandits, T)
@@ -156,7 +157,10 @@ class TSTest:
                         e1 = 0
                         for i in range(self.k):
                             for j in range(self.k):
-                                curr_e1 = fairness_calc.get_e1_smooth_fairness(e2, i, j, self.curr_test.pi[t],
+                                if i == j:
+                                    curr_e1=0.
+                                else:
+                                    curr_e1 = fairness_calc.get_e1_smooth_fairness(e2, self.curr_test.pi[t],
                                                                                  self.r_theta,  self.distance)
                                                                                 # self.r_theta, self.distance)
                                 e1 = max(e1, curr_e1)
@@ -168,7 +172,10 @@ class TSTest:
                         e1 = 0
                         for i in range(self.k):
                             for j in range(self.k):
-                                curr_e1 = fairness_calc.get_e1_smooth_fairness(e2, i, j, self.curr_test.pi[t],
+                                if i == j:
+                                    curr_e1 = 0.
+                                else:
+                                    curr_e1 = fairness_calc.get_e1_smooth_fairness(e2, i, j, self.curr_test.pi[t],
                                                                                self.curr_test.r_h[t], self.distance)
                                 e1 = max(e1, curr_e1)
                         subjective_min_e1[e2_ind, t, it] = e1
@@ -209,14 +216,13 @@ class TSTest:
             self.average_regret = self.get_regret()
         if fair_regret:
             self.average_fairness_regret = np.divide(self.average_fairness_regret, self.n_iter)
-
         self.save_object()
 
     def save_object(self):
         i = 0
         date_time= 'test-{date:%Y-%m-%d_%H:%M:%S}'.format(date=datetime.datetime.now())
 
-        directory = 'objects/{}'.format(self.T) +'/'
+        directory = 'normal/objects/{}'.format(self.T) +'/'
         if not os.path.exists(directory):
             os.makedirs(directory)
         file_name = directory + self.bandits.data_set_name + '_' + self.name + '_N_ITER_{}'.format(

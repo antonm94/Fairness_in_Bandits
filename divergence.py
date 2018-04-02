@@ -1,21 +1,45 @@
 import operator
 import scipy.stats
 import math
-
+import scipy
+import numpy as np
+import time
 def total_variation_distance(p, q):
     diff_abs = map(abs, map(operator.sub, p, q))
     return sum(diff_abs) * 0.5
 
 
 def kl_divergence(p, q):
-    return scipy.stats.entropy(p, q)
+
+    kl = scipy.stats.entropy(p, q)
+    # print kl
+    return kl
 
 
-def normal_kl(pm, pv, qm, qv):
-    a = pow(pm-qm, 2)/(2*qv)
-    var_div = (pv / qv)
-    b = var_div - 1 - math.log(var_div)
-    return a + 0.5*b
+def cont_kl(p, q, norm=0):
+    if norm:
+        pm = p.mean()
+        qm = q.mean()
+        pv = p.var()
+        qv = q.var()
+        a = pow(pm - qm, 2) / (2 * qv)
+        var_div = (pv / qv)
+        b = var_div - 1 - math.log(var_div)
+        return a + 0.5 * b
+    else:
+        f = lambda x: -p.pdf(x) * (q.logpdf(x) - p.logpdf(x))
+        kl = scipy.integrate.quad(f, -np.inf, np.inf)[0]
+        return kl
+
+
+
+
+
+def cont_total_variation_distance(p, q, norm=1):
+    fun = lambda x: abs(p.pdf(x) - q.pdf(x))
+    tv = 0.5 * scipy.integrate.quad(fun, -np.inf, np.inf)[0]
+    return tv
+
 
 
 # Copyright (c) 2008 Carnegie Mellon University
@@ -63,6 +87,7 @@ def gau_bh(pm, pv, qm, qv):
     # 0.125 (\mu_q - \mu_p)^T \Sigma_{pq}^{-1} (\mu_q - \mu_p)
     dist = 0.125 * (diff * (1./pqv) * diff).sum(axis)
     return dist + norm
+
 
 def gau_kl(pm, pv, qm, qv):
     """
@@ -148,7 +173,48 @@ def multi_js(p, q):
                       + (p * (numpy.log(p.clip(1e-10,1))
                               - numpy.log(q.clip(1e-10,1)))).sum(axis))
 if __name__ == '__main__':
-    p = [0.4, 0.6]
-    q = [0.6, 0.4]
-    print total_variation_distance(p,q)
-    print kl_divergence(p,q)
+    import scipy.special
+    import numpy as np
+
+    qfunc = lambda x: 0.5 - 0.5 * scipy.special.erf(x / np.sqrt(2))
+    fun1 = lambda x: p.pdf(x)
+    fun2 = lambda x: q.pdf(x)
+    df1 = 123
+    loc1 = 1
+    scale1 = 0.1
+    df2 = 1230
+    loc2 = 2
+    scale2 = 0.5
+    p = scipy.stats.t(df=df1, loc=loc1, scale=scale1)
+    q = scipy.stats.t(df=df2, loc=loc2, scale=scale2)
+    int1 = scipy.integrate.quad(fun1, -np.inf, np.inf)[0]
+    int2 = scipy.integrate.quad(fun2,  -np.inf, np.inf)[0]
+    tv1 = 0.5*abs(int1 - int2)
+    # print tv1
+    t = time.time()
+    for i in range(10):
+        a = cont_total_variation_distance(p, q)
+    print time.time() - t
+    print a
+
+    t = time.time()
+    for i in range(10):
+        s = [abs(q.pdf(x) - p.pdf(x)) for x in np.lin]
+        a = 0.5*np.sum(s)
+    print time.time() - t
+    print a
+
+
+    # print abs((qfunc((-np.inf)) - loc1)/scale1 - (qfunc((-np.inf)) - loc2)/scale2)
+
+
+
+   # print a
+    #
+    # # fun = lambda x: abs(p.pdf(x) - q.pdf(x))
+    #
+    # fun = lambda x: abs(qfunc((x-loc1)/scale1) - qfunc((x-loc2)/scale2))
+    #
+    # # fun = lambda x: abs(((qfunc(x)-loc1)/scale1) - ((qfunc(x)-loc2)/scale2))
+    # tv = 0.5 * scipy.integrate.quad(fun, -np.inf, np.inf)[0]
+    # print tv

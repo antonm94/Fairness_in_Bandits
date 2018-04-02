@@ -38,6 +38,14 @@ def c_alg(e2_arr, delta_arr, realTheta):
 
     return c
 
+
+def c_alg_normal(e2, delta, bandit):
+    max_divergence = np.amax(bandit.divergence)
+    max_divergence = 1
+    return  (pow(2.*max_divergence + 1, 2.) * (math.log(2) - math.log(delta))) / (2 * pow(e2, 2.))
+
+
+
 if __name__ == '__main__':
     np.set_printoptions(suppress=True)
 

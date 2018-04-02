@@ -14,7 +14,7 @@ class Bandits:
         self.theta = self.get_mean()
         self.p_star = self.calc_p_star()
         self.data_set_name = data_set_name
-
+        print self.p_star
 
     def get_mean(self):
         t = np.zeros(self.k)
@@ -61,4 +61,6 @@ class Bandits:
         for i in range(self.k):
             for j in range(self.k):
                 dmax = max(distance([self.theta[i], 1-self.theta[i]], [self.theta[j], 1-self.theta[j]]), dmax)
+
         return dmax
+
